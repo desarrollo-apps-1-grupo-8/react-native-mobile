@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private AuthServiceImpl authService;
+    private final AuthServiceImpl authService;
 
     @PostMapping("/register")
     public ResponseEntity<AuthRegisterResponse> register(@RequestBody AuthRegisterRequest request) {

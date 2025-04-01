@@ -13,7 +13,7 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private String id;
+    private Long id;
 
     @Column(name = "first_name", nullable = false)
     private String firstName;
@@ -21,7 +21,7 @@ public class User {
     @Column(name = "last_name", nullable = false)
     private String lastName;
 
-    @Column(name = "dni", nullable = false, unique = true)
+    @Column(name = "dni", nullable = false, unique = true, length = 8)
     private String dni;
 
     @Column(name = "phone")
@@ -33,10 +33,10 @@ public class User {
     @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "role_id", nullable = false)
+    @Column(name = "role_id", nullable = false, length = 2)
     private String roleId;
 
     @Column(name = "active")
-    private boolean active;
+    private String active;
     //private Order order; TODO: agregar cuando lo tengamos
 }
