@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 public class AuthRegisterRequest {
     private String email;
     private String password;
-    private String roleId;
+    private long roleId;
     private String firstName;
     private String lastName;
     private String dni;
