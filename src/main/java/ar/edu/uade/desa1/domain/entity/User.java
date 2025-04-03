@@ -3,11 +3,15 @@ package ar.edu.uade.desa1.domain.entity;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 @Entity
 @Data
 @Table(name = "users")
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
 
     @Id
