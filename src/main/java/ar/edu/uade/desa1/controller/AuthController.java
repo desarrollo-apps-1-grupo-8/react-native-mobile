@@ -1,6 +1,8 @@
 package ar.edu.uade.desa1.controller;
 
+import ar.edu.uade.desa1.domain.request.AuthLoginRequest;
 import ar.edu.uade.desa1.domain.request.AuthRegisterRequest;
+import ar.edu.uade.desa1.domain.response.AuthLoginResponse;
 import ar.edu.uade.desa1.domain.response.AuthRegisterResponse;
 import ar.edu.uade.desa1.service.AuthServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -21,4 +23,11 @@ public class AuthController {
     public ResponseEntity<AuthRegisterResponse> register(@RequestBody AuthRegisterRequest request) {
         return ResponseEntity.ok(authService.register(request));
     }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthLoginResponse> login(@RequestBody AuthLoginRequest request) {
+        return ResponseEntity.ok(authService.login(request));
+    }   
+
+
 }

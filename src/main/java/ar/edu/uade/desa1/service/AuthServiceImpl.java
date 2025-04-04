@@ -1,8 +1,11 @@
 package ar.edu.uade.desa1.service;
 
+import ar.edu.uade.desa1.config.JwtUtil;
 import ar.edu.uade.desa1.domain.entity.Role;
 import ar.edu.uade.desa1.domain.entity.User;
+import ar.edu.uade.desa1.domain.request.AuthLoginRequest;
 import ar.edu.uade.desa1.domain.request.AuthRegisterRequest;
+import ar.edu.uade.desa1.domain.response.AuthLoginResponse;
 import ar.edu.uade.desa1.domain.response.AuthRegisterResponse;
 import ar.edu.uade.desa1.exception.NotFoundException;
 import ar.edu.uade.desa1.exception.UserAlreadyExistsException;
@@ -10,6 +13,9 @@ import ar.edu.uade.desa1.repository.RoleRepository;
 import ar.edu.uade.desa1.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +27,8 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
+
 
     @Transactional
     public AuthRegisterResponse register(AuthRegisterRequest request) {
@@ -50,5 +58,21 @@ public class AuthServiceImpl implements AuthService {
                 .createdUserId(savedUser.getId().toString())
                 .build();
     }
+
+    @Override
+    public AuthLoginResponse login(AuthLoginRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+            .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+    
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new BadCredentialsException("Contraseña incorrecta");
+        }
+    
+        String token = jwtUtil.generateToken(user.getEmail());
+    
+        return new AuthLoginResponse(token);
+    }
+
+    
 
 }
