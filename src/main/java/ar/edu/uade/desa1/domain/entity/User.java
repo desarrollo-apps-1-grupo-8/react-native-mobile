@@ -3,11 +3,16 @@ package ar.edu.uade.desa1.domain.entity;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import java.time.LocalDateTime;
 
 @Entity
 @Data
 @Table(name = "users")
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class User {
 
     @Id
@@ -39,5 +44,15 @@ public class User {
 
     @Column(name = "active")
     private String active;
+    
+    @Column(name = "verification_code", length = 64)
+    private String verificationCode;
+    
+    @Column(name = "verification_code_expiry")
+    private LocalDateTime verificationCodeExpiry;
+    
+    @Column(name = "email_verified")
+    private Boolean emailVerified;
+    
     //private Order order; TODO: agregar cuando lo tengamos
 }
