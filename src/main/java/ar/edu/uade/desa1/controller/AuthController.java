@@ -2,6 +2,8 @@ package ar.edu.uade.desa1.controller;
 
 import ar.edu.uade.desa1.domain.request.AuthLoginRequest;
 import ar.edu.uade.desa1.domain.request.AuthRegisterRequest;
+import ar.edu.uade.desa1.domain.request.PasswordRecoveryRequest;
+import ar.edu.uade.desa1.domain.request.PasswordResetRequest;
 import ar.edu.uade.desa1.domain.response.AuthLoginResponse;
 import ar.edu.uade.desa1.domain.response.AuthRegisterResponse;
 import ar.edu.uade.desa1.service.AuthServiceImpl;
@@ -28,6 +30,18 @@ public class AuthController {
     public ResponseEntity<AuthLoginResponse> login(@RequestBody AuthLoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }   
+
+    @PostMapping("/recover")
+    public ResponseEntity<String> recoverPassword(@RequestBody PasswordRecoveryRequest request) {
+        authService.recoverPassword(request.getEmail());
+        return ResponseEntity.ok("Se ha enviado un token de recuperación.");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestBody PasswordResetRequest request) {
+        authService.resetPassword(request.getToken(), request.getNewPassword());
+        return ResponseEntity.ok("Contraseña actualizada correctamente.");
+    }
 
 
 }
