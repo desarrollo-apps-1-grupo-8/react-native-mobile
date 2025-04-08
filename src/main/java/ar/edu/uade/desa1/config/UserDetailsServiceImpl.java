@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-//Este es el punte entre el token y la base de datos, esta clase sirve para cargar el usuario autenticado a la DB.
+//Este es el punto entre el token y la base de datos, esta clase sirve para cargar el usuario autenticado a la DB.
 //JWT da el email dentro del token, pero hay que decirle a Spring cómo conseguir el UserDetails completo (con roles, permisos, etc).
 public class UserDetailsServiceImpl implements UserDetailsService {
 
