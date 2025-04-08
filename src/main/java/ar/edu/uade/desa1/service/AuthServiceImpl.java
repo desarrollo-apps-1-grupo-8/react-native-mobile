@@ -9,7 +9,6 @@ import ar.edu.uade.desa1.domain.response.AuthLoginResponse;
 import ar.edu.uade.desa1.domain.response.AuthRegisterResponse;
 import ar.edu.uade.desa1.exception.NotFoundException;
 import ar.edu.uade.desa1.exception.UserAlreadyExistsException;
-import ar.edu.uade.desa1.repository.PasswordResetTokenRepository;
 import ar.edu.uade.desa1.repository.RoleRepository;
 import ar.edu.uade.desa1.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -68,6 +67,12 @@ public class AuthServiceImpl implements AuthService {
     public AuthLoginResponse login(AuthLoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
             .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+
+            System.out.println("EMAIL ingresado: " + request.getEmail());
+            System.out.println("PASS ingresada: " + request.getPassword());
+            System.out.println("PASS encriptada en BD: " + user.getPassword());
+            System.out.println("¿Coinciden?: " + passwordEncoder.matches(request.getPassword(), user.getPassword()));
+        
     
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new BadCredentialsException("Contraseña incorrecta");
@@ -75,10 +80,12 @@ public class AuthServiceImpl implements AuthService {
     
         String token = jwtUtil.generateToken(user.getEmail());
     
-        return new AuthLoginResponse(token);
+        return new AuthLoginResponse(token);//se genera y devuelve el token
     }
 
-    @Autowired
+    
+    /*
+     * @Autowired
     private PasswordResetTokenRepository tokenRepository;
 
     public void recoverPassword(String email) {
@@ -109,6 +116,8 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(user);
         tokenRepository.delete(resetToken);
     }
+    
+     */
     
 
 }
