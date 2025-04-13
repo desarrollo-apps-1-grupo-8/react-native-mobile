@@ -7,10 +7,7 @@ import ar.edu.uade.desa1.domain.response.VerifyEmailResponse;
 import ar.edu.uade.desa1.service.AuthServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -27,5 +24,10 @@ public class AuthController {
     @PostMapping("/verify-email")
     public ResponseEntity<VerifyEmailResponse> verifyEmail(@RequestBody VerifyEmailRequest request) {
         return ResponseEntity.ok(authService.verifyEmail(request));
+    }
+    
+    @PostMapping("/resend-verification")
+    public ResponseEntity<VerifyEmailResponse> resendVerification(@RequestParam String email) {
+        return ResponseEntity.ok(authService.resendVerificationEmail(email));
     }
 }

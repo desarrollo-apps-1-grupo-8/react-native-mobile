@@ -11,4 +11,5 @@ public interface AuthService {
 
     AuthRegisterResponse register(AuthRegisterRequest request) throws RoleNotFoundException;
     VerifyEmailResponse verifyEmail(VerifyEmailRequest request);
+    VerifyEmailResponse resendVerificationEmail(String email);
 }
