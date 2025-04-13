@@ -26,7 +26,7 @@ public class AuthServiceImpl implements AuthService {
     public static final String USER_REGISTERED_SUCCESSFULLY = "User registered successfully. Please check your email for verification instructions.";
     public static final String EMAIL_VERIFIED_SUCCESSFULLY = "Email verified successfully.";
     public static final String INVALID_VERIFICATION_CODE = "Invalid or expired verification code.";
-    public static final String VERIFICATION_EMAIL_RESENT = "Verification email has been resent. Please check your inbox.";
+    public static final String VERIFICATION_EMAIL_SENT = "Verification email has been sent. Please check your inbox.";
     public static final String EMAIL_ALREADY_VERIFIED = "Email already verified.";
     
     private final UserRepository userRepository;
@@ -115,7 +115,7 @@ public class AuthServiceImpl implements AuthService {
     }
     
     @Override
-    public VerifyEmailResponse resendVerificationEmail(String email) {
+    public VerifyEmailResponse sendVerificationEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User with email " + email + " not found"));
         
@@ -132,12 +132,12 @@ public class AuthServiceImpl implements AuthService {
         user.setVerificationCodeExpiry(LocalDateTime.now().plusMinutes(expirationMinutes));
         userRepository.save(user);
         
-        // Resend verification email
+        // Send verification email
         emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), verificationCode);
         
         return VerifyEmailResponse.builder()
                 .success(true)
-                .message(VERIFICATION_EMAIL_RESENT)
+                .message(VERIFICATION_EMAIL_SENT)
                 .build();
     }
     
