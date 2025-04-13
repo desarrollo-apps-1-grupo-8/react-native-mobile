@@ -23,17 +23,17 @@ import java.util.Random;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    public static final String USER_REGISTERED_SUCCESSFULLY = "User registered successfully. Please check your email for verification instructions.";
-    public static final String EMAIL_VERIFIED_SUCCESSFULLY = "Email verified successfully.";
-    public static final String INVALID_VERIFICATION_CODE = "Invalid or expired verification code.";
-    public static final String EMAIL_ALREADY_VERIFIED = "Email already verified.";
+    public static final String USER_REGISTERED_SUCCESSFULLY = "Usuario registrado satisfactoriamente";
+    public static final String EMAIL_VERIFIED_SUCCESSFULLY = "Email verificado satisfactoriamente.";
+    public static final String INVALID_VERIFICATION_CODE = "Código de verificación inválido o expirado.";
+    public static final String EMAIL_ALREADY_VERIFIED = "Email ya verificado.";
     
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final EmailService emailService;
     
-    @Value("${app.email.verification.expiration-minutes:15}")
+    @Value("${email.verification.expiration-minutes:15}")
     private int expirationMinutes;
 
     @Transactional
@@ -58,7 +58,7 @@ public class AuthServiceImpl implements AuthService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(role)
-                .active("false") // Set to inactive until email is verified
+                .active("false")
                 .verificationCode(verificationCode)
                 .verificationCodeExpiry(verificationCodeExpiry)
                 .emailVerified(false)
@@ -78,7 +78,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public VerifyEmailResponse verifyEmail(VerifyEmailRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new NotFoundException("User with email " + request.getEmail() + " not found"));
+                .orElseThrow(() -> new NotFoundException("Usuario con email " + request.getEmail() + " no encontrado"));
         
         if (user.getEmailVerified() != null && user.getEmailVerified()) {
             return VerifyEmailResponse.builder()
@@ -114,7 +114,6 @@ public class AuthServiceImpl implements AuthService {
     }
     
     private String generateVerificationCode() {
-        // Generate a 6-digit verification code
         Random random = new Random();
         int code = 100000 + random.nextInt(900000);
         return String.valueOf(code);
