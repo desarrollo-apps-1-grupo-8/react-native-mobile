@@ -19,7 +19,4 @@ Content-Type: application/json
 {
   "email": "test@example.com",
   "verificationCode": "123456"
-}
-
-### Send verification email
-POST http://localhost:8080/api/v1/send-verification?email=test@example.com 
+} 
