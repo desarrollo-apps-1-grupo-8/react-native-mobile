@@ -13,10 +13,15 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .headers(headers -> headers.frameOptions(frame -> frame.disable()))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/h2-console/**", "/api/v1/register").permitAll()
-                .anyRequest().authenticated()
-            )
+            .authorizeHttpRequests(auth -> {
+                auth.requestMatchers("/h2-console/**", "/api/v1/register").permitAll();
+                
+                auth.requestMatchers("/api/v1/routes", "/api/v1/routes/{id}").permitAll();
+                
+                auth.requestMatchers("/api/v1/routes/update-status", "/api/v1/routes/history/{userId}").authenticated();
+                
+                auth.anyRequest().authenticated();
+            })
             .httpBasic();
 
         return http.build();

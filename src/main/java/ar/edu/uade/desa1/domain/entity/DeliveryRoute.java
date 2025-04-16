@@ -1,5 +1,6 @@
 package ar.edu.uade.desa1.domain.entity;
 
+import ar.edu.uade.desa1.domain.enums.RouteStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,10 +16,6 @@ public class DeliveryRoute {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Valor único asociado al código QR
-    @Column(name = "qr_code", nullable = false, unique = true)
-    private String qrCode;
-
     @Column(name = "package_info")
     private String packageInfo;
 
@@ -28,11 +25,15 @@ public class DeliveryRoute {
     @Column(name = "destination")
     private String destination;
 
-    // Estado de la ruta: available, in_progress, completed
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private String status;
+    private RouteStatus status;
 
-    // Identificador del usuario (repartidor) asignado a la ruta
-    @Column(name = "assigned_user_id")
-    private Long assignedUserId;
+    // Usuario normal que creó la ruta
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
+    // Repartidor asignado a la ruta
+    @Column(name = "delivery_user_id")
+    private Long deliveryUserId;
 }
