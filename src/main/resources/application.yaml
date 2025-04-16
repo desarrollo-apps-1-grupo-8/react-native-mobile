@@ -15,3 +15,15 @@ spring:
       ddl-auto: create-drop
     show-sql: true
     database-platform: org.hibernate.dialect.H2Dialect
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: contacto.grupo8.desarrollo@gmail.com
+    password: fprm bpbb pzcj qnqi
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+

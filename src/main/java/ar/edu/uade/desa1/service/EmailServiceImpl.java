@@ -1,38 +1,35 @@
 package ar.edu.uade.desa1.service;
 
-import lombok.RequiredArgsConstructor;
+import com.resend.Resend;
+import com.resend.services.emails.model.CreateEmailOptions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
+import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class EmailServiceImpl implements EmailService {
 
-    private final JavaMailSender mailSender;
+    @Autowired
+    private JavaMailSender javaMailSender;
+    @Autowired
+    private Environment environment;
 
     @Override
     public void sendVerificationEmail(String to, String firstName, String verificationCode) {
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true);
-            
-            helper.setTo(to);
-            helper.setSubject("Email Verification");
-            
-            String content = "<p>Hello " + firstName + ",</p>"
-                    + "<p>Please use the following verification code to verify your email address:</p>"
-                    + "<h2 style='background-color: #f8f9fa; padding: 10px; text-align: center;'>" + verificationCode + "</h2>"
-                    + "<p>This code will expire in 15 minutes.</p>"
-                    + "<p>Thank you,<br>UADE Backend Team</p>";
-            
-            helper.setText(content, true);
-            
-            mailSender.send(message);
-        } catch (MessagingException e) {
+            SimpleMailMessage message = new SimpleMailMessage();
+                    message.setFrom(environment.getProperty("spring.mail.username"));
+                    message.setTo(to);
+                    message.setSubject("Verificación de cuenta");
+                    message.setText("Hola " + firstName + ", tu código de verificación es: " + verificationCode);
+
+            javaMailSender.send(message);
+        } catch (Exception e) {
             throw new RuntimeException("Failed to send verification email", e);
         }
     }
