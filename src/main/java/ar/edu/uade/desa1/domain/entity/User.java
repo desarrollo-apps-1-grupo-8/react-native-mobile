@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import java.time.LocalDateTime;
 
 @Entity
 @NoArgsConstructor
@@ -43,5 +44,14 @@ public class User {
 
     @Column(name = "active")
     private String active;
-    //private Order order; TODO: agregar cuando lo tengamos
+    
+    @Column(name = "verification_code", length = 64)
+    private String verificationCode;
+    
+    @Column(name = "verification_code_expiry")
+    private LocalDateTime verificationCodeExpiry;
+    
+    @Column(name = "email_verified")
+    private Boolean emailVerified;
+    
 }

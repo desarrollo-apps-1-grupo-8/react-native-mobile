@@ -1,18 +1,13 @@
 package ar.edu.uade.desa1.controller;
 
-import ar.edu.uade.desa1.domain.request.AuthLoginRequest;
-import ar.edu.uade.desa1.domain.request.AuthRegisterRequest;
-import ar.edu.uade.desa1.domain.request.PasswordRecoveryRequest;
-import ar.edu.uade.desa1.domain.request.PasswordResetRequest;
+import ar.edu.uade.desa1.domain.request.*;
 import ar.edu.uade.desa1.domain.response.AuthLoginResponse;
 import ar.edu.uade.desa1.domain.response.AuthRegisterResponse;
+import ar.edu.uade.desa1.domain.response.VerifyEmailResponse;
 import ar.edu.uade.desa1.service.AuthServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -29,10 +24,10 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthLoginResponse> login(@RequestBody AuthLoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
-    }   
+    }
 
-    /*
-     *  @PostMapping("/recover")
+/*
+    @PostMapping("/recover")
     public ResponseEntity<String> recoverPassword(@RequestBody PasswordRecoveryRequest request) {
         authService.recoverPassword(request.getEmail());
         return ResponseEntity.ok("Se ha enviado un token de recuperación.");
@@ -43,8 +38,9 @@ public class AuthController {
         authService.resetPassword(request.getToken(), request.getNewPassword());
         return ResponseEntity.ok("Contraseña actualizada correctamente.");
     }
-     */
-   
-
-
+*/
+    @PostMapping("/verify-email")
+    public ResponseEntity<VerifyEmailResponse> verifyEmail(@RequestBody VerifyEmailRequest request) {
+        return ResponseEntity.ok(authService.verifyEmail(request));
+    }
 }
