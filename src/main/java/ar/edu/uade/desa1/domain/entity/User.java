@@ -3,16 +3,16 @@ package ar.edu.uade.desa1.domain.entity;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
-import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
 @Data
 @Table(name = "users")
 @Builder
-@AllArgsConstructor
-@NoArgsConstructor
 public class User {
 
     @Id
@@ -54,5 +54,4 @@ public class User {
     @Column(name = "email_verified")
     private Boolean emailVerified;
     
-    //private Order order; TODO: agregar cuando lo tengamos
 }
