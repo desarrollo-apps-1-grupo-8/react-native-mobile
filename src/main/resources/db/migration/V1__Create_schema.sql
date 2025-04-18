@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     role_id BIGINT NOT NULL,
-    active VARCHAR(1),
+    active VARCHAR(5),
     verification_code VARCHAR(64),
     verification_code_expiry TIMESTAMP,
     email_verified BOOLEAN,
