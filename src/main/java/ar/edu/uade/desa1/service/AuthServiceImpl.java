@@ -99,7 +99,7 @@ public class AuthServiceImpl implements AuthService {
     
         String token = jwtUtil.generateToken(user.getEmail());
     
-        return new AuthLoginResponse(token);//se genera y devuelve el token
+        return new AuthLoginResponse(true, token);//se genera y devuelve el token y success = verdadero
     }
 
     
