@@ -97,7 +97,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BadCredentialsException("Contraseña incorrecta");
         }
     
-        String token = jwtUtil.generateToken(user.getEmail());
+        String token = jwtUtil.generateToken(user);
     
         return new AuthLoginResponse(true, token);//se genera y devuelve el token y success = verdadero
     }
