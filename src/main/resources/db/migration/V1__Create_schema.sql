@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS users (
     FOREIGN KEY (role_id) REFERENCES roles(id)
 );
 
+
 CREATE TABLE IF NOT EXISTS routes (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     package_info VARCHAR(255),
@@ -30,6 +31,8 @@ CREATE TABLE IF NOT EXISTS routes (
     status VARCHAR(20) NOT NULL,
     user_id BIGINT NOT NULL,
     delivery_user_id BIGINT,
+    created_at DATE NOT NULL,
+    updated_at DATE,
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (delivery_user_id) REFERENCES users(id)
 );
