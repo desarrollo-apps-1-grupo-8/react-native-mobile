@@ -48,7 +48,7 @@ public class User implements UserDetails {
     private Role role;
 
     @Column(name = "active")
-    private String active;
+    private Boolean active;
     
     @Column(name = "verification_code", length = 64)
     private String verificationCode;

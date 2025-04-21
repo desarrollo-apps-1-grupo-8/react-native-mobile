@@ -3,7 +3,8 @@ package ar.edu.uade.desa1.controller;
 import ar.edu.uade.desa1.domain.request.*;
 import ar.edu.uade.desa1.domain.response.AuthLoginResponse;
 import ar.edu.uade.desa1.domain.response.AuthRegisterResponse;
-import ar.edu.uade.desa1.domain.response.VerifyEmailResponse;
+import ar.edu.uade.desa1.domain.response.SendVerificationCodeResponse;
+import ar.edu.uade.desa1.domain.response.VerifyCodeResponse;
 import ar.edu.uade.desa1.service.AuthServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -39,8 +40,13 @@ public class AuthController {
         return ResponseEntity.ok("Contraseña actualizada correctamente.");
     }
 */
-    @PostMapping("/verify-email")
-    public ResponseEntity<VerifyEmailResponse> verifyEmail(@RequestBody VerifyEmailRequest request) {
-        return ResponseEntity.ok(authService.verifyEmail(request));
+    @PostMapping("/verify-code")
+    public ResponseEntity<VerifyCodeResponse> verifyCode(@RequestBody VerifyCodeRequest request) {
+        return ResponseEntity.ok(authService.verifyCode(request));
+    }
+
+    @PostMapping("/send-verification-code")
+    public ResponseEntity<SendVerificationCodeResponse> sendVerificationCode(@RequestBody SendVerificationCodeRequest request) {
+        return ResponseEntity.ok(authService.sendVerificationCode(request));
     }
 }
