@@ -3,6 +3,7 @@ package ar.edu.uade.desa1.controller;
 import ar.edu.uade.desa1.domain.entity.DeliveryRoute;
 import ar.edu.uade.desa1.domain.request.CreateRouteRequest;
 import ar.edu.uade.desa1.domain.request.UpdateRouteStatusRequest;
+import ar.edu.uade.desa1.domain.response.DeliveryRouteResponse;
 import ar.edu.uade.desa1.service.DeliveryRouteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -32,7 +33,7 @@ public class DeliveryRouteController {
     }
 
     @PostMapping("/update-status")
-    public ResponseEntity<DeliveryRoute> updateRouteStatus(@RequestBody UpdateRouteStatusRequest request) {
+    public ResponseEntity<DeliveryRouteResponse> updateRouteStatus(@RequestBody UpdateRouteStatusRequest request) {
         return ResponseEntity.ok(deliveryRouteService.updateRouteStatus(
             request.getDeliveryRouteId(), 
             request.getStatus(),
@@ -41,7 +42,7 @@ public class DeliveryRouteController {
     }
 
     @GetMapping("/history/{userId}")
-    public ResponseEntity<List<DeliveryRoute>> getCompletedRoutes(@PathVariable("userId") Long userId) {
+    public ResponseEntity<List<DeliveryRouteResponse>> getCompletedRoutes(@PathVariable("userId") Long userId) {
         return ResponseEntity.ok(deliveryRouteService.getCompletedRoutesByUser(userId));
     }
 }

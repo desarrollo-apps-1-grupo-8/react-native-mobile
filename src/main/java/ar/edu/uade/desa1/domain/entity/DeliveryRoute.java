@@ -4,6 +4,8 @@ import ar.edu.uade.desa1.domain.enums.RouteStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Data
 @Builder
@@ -29,11 +31,28 @@ public class DeliveryRoute {
     @Column(name = "status", nullable = false)
     private RouteStatus status;
 
-    // Usuario normal que creó la ruta
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    // Repartidor asignado a la ruta
-    @Column(name = "delivery_user_id")
-    private Long deliveryUserId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "delivery_user_id")
+    private User deliveryUser;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }
