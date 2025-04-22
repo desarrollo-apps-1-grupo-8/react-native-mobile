@@ -10,6 +10,7 @@ import java.util.List;
 public interface DeliveryRouteService {
     DeliveryRoute createRoute(CreateRouteRequest request);
     List<DeliveryRouteResponse> getAllRoutes();
+    List<DeliveryRouteResponse> getAllRoutesByUserId(Long userId);
     DeliveryRoute getRouteById(Long id);
     DeliveryRouteResponse updateRouteStatus(Long routeId, String status, Long deliveryUserId);
     List<DeliveryRouteResponse> getCompletedRoutesByUser(Long userId);

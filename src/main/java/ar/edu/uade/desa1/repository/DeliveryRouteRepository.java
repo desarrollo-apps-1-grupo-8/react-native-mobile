@@ -12,4 +12,7 @@ import java.util.List;
 public interface DeliveryRouteRepository extends JpaRepository<DeliveryRoute, Long> {
     @Query(value = "SELECT * FROM routes WHERE user_id = :userId AND status = :status", nativeQuery = true)
     List<DeliveryRoute> findByUserIdAndStatus(@Param("userId") Long userId, @Param("status") String status);
+
+    @Query(value = "SELECT * FROM routes WHERE user_id = :userId", nativeQuery = true)
+    List<DeliveryRoute> findByUserId(@Param("userId") Long userId);
 }

@@ -27,6 +27,11 @@ public class DeliveryRouteController {
         return ResponseEntity.ok(deliveryRouteService.getAllRoutes());
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<DeliveryRouteResponse>> getAllRoutesByUserId(@PathVariable("userId") Long userId) {
+        return ResponseEntity.ok(deliveryRouteService.getAllRoutesByUserId(userId));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<DeliveryRoute> getRouteById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(deliveryRouteService.getRouteById(id));
