@@ -23,7 +23,7 @@ public class DeliveryRouteController {
     }
 
     @GetMapping
-    public ResponseEntity<List<DeliveryRoute>> getAllRoutes() {
+    public ResponseEntity<List<DeliveryRouteResponse>> getAllRoutes() {
         return ResponseEntity.ok(deliveryRouteService.getAllRoutes());
     }
 

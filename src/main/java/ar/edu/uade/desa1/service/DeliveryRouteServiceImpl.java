@@ -47,9 +47,20 @@ public class DeliveryRouteServiceImpl implements DeliveryRouteService {
     }
 
     @Override
-    public List<DeliveryRoute> getAllRoutes() {
+    public List<DeliveryRouteResponse> getAllRoutes() {
         try {
-            return deliveryRouteRepository.findAll();
+            var routes = deliveryRouteRepository.findAll();
+
+            return routes.stream().map(route -> DeliveryRouteResponse.builder()
+                    .id(route.getId())
+                    .userInfo(route.getUser().getFirstName() + " " + route.getUser().getLastName())
+                    .packageInfo(route.getPackageInfo())
+                    .origin(route.getOrigin())
+                    .destination(route.getDestination())
+                    .createdAt(route.getCreatedAt())
+                    .updatedAt(route.getUpdatedAt())
+                    .status(route.getStatus())
+                    .build()).toList();
         } catch (Exception e) {
             throw new RuntimeException("Error getting all routes: " + e.getMessage());
         }
