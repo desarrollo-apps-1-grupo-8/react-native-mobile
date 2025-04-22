@@ -1,7 +1,6 @@
 package ar.edu.uade.desa1.service;
 
 import ar.edu.uade.desa1.config.JwtUtil;
-import ar.edu.uade.desa1.domain.entity.PasswordResetToken;
 import ar.edu.uade.desa1.domain.entity.Role;
 import ar.edu.uade.desa1.domain.entity.User;
 import ar.edu.uade.desa1.domain.request.AuthLoginRequest;
@@ -14,7 +13,6 @@ import ar.edu.uade.desa1.domain.response.SendVerificationCodeResponse;
 import ar.edu.uade.desa1.domain.response.VerifyCodeResponse;
 import ar.edu.uade.desa1.exception.NotFoundException;
 import ar.edu.uade.desa1.exception.UserAlreadyExistsException;
-import ar.edu.uade.desa1.repository.PasswordResetTokenRepository;
 import ar.edu.uade.desa1.repository.RoleRepository;
 import ar.edu.uade.desa1.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -43,7 +41,6 @@ public class AuthServiceImpl implements AuthService {
     private final RoleRepository roleRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
-    private final PasswordResetTokenRepository tokenRepository;
 
     private final EmailService emailService;
     
