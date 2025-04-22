@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UpdateRouteStatusRequest {
     private Long deliveryRouteId;
-    private RouteStatus status;
+    private String status;
     private Long deliveryUserId;
 } 

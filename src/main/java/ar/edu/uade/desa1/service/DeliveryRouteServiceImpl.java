@@ -79,7 +79,7 @@ public class DeliveryRouteServiceImpl implements DeliveryRouteService {
     }
     @Override
     @Transactional
-    public DeliveryRouteResponse updateRouteStatus(Long routeId, RouteStatus status, Long deliveryUserId) {
+    public DeliveryRouteResponse updateRouteStatus(Long routeId, String status, Long deliveryUserId) {
         try {
             User deliveryUser = userRepository.findById(deliveryUserId)
                     .orElseThrow(() -> new NotFoundException("Delivery user not found for id: " + deliveryUserId));
@@ -91,11 +91,11 @@ public class DeliveryRouteServiceImpl implements DeliveryRouteService {
                 throw new RuntimeException("Only the assigned delivery user can change the route status");
             }
 
-            if (RouteStatus.IN_PROGRESS.equals(status)) {
+            if (RouteStatus.IN_PROGRESS == RouteStatus.valueOf(status)) {
                 route.setDeliveryUser(deliveryUser);
             }
 
-            route.setStatus(status);
+            route.setStatus(RouteStatus.valueOf(status));
             route.setUpdatedAt(LocalDateTime.now());
             DeliveryRoute savedRoute = deliveryRouteRepository.save(route);
 

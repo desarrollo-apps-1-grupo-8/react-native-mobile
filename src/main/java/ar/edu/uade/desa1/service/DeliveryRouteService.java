@@ -11,6 +11,6 @@ public interface DeliveryRouteService {
     DeliveryRoute createRoute(CreateRouteRequest request);
     List<DeliveryRouteResponse> getAllRoutes();
     DeliveryRoute getRouteById(Long id);
-    DeliveryRouteResponse updateRouteStatus(Long routeId, RouteStatus status, Long deliveryUserId);
+    DeliveryRouteResponse updateRouteStatus(Long routeId, String status, Long deliveryUserId);
     List<DeliveryRouteResponse> getCompletedRoutesByUser(Long userId);
 }
