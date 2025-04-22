@@ -5,20 +5,23 @@ import ar.edu.uade.desa1.domain.response.AuthLoginResponse;
 import ar.edu.uade.desa1.domain.response.AuthRegisterResponse;
 import ar.edu.uade.desa1.domain.response.SendVerificationCodeResponse;
 import ar.edu.uade.desa1.domain.response.VerifyCodeResponse;
+import ar.edu.uade.desa1.service.AuthService;
 import ar.edu.uade.desa1.service.AuthServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import javax.management.relation.RoleNotFoundException;
 
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthServiceImpl authService;
+    private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthRegisterResponse> register(@RequestBody AuthRegisterRequest request) {
+    public ResponseEntity<AuthRegisterResponse> register(@RequestBody AuthRegisterRequest request) throws RoleNotFoundException {
         return ResponseEntity.ok(authService.register(request));
     }
 

@@ -28,4 +28,19 @@ public class EmailServiceImpl implements EmailService {
             throw new RuntimeException("Failed to send verification email", e);
         }
     }
+
+    @Override
+    public void sendRecoverEmail(String to, String firstName, String Token) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(environment.getProperty("spring.mail.username"));
+            message.setTo(to);
+            message.setSubject("Recuperacion de contraseña");
+            message.setText("Hola " + firstName + ", tu código de verificación es: " + verificationCode);
+
+            javaMailSender.send(message);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send verification email", e);
+        }
+    }
 } 

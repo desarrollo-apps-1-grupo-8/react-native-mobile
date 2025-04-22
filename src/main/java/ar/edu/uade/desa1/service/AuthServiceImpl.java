@@ -1,6 +1,7 @@
 package ar.edu.uade.desa1.service;
 
 import ar.edu.uade.desa1.config.JwtUtil;
+import ar.edu.uade.desa1.domain.entity.PasswordResetToken;
 import ar.edu.uade.desa1.domain.entity.Role;
 import ar.edu.uade.desa1.domain.entity.User;
 import ar.edu.uade.desa1.domain.request.AuthLoginRequest;
@@ -13,6 +14,7 @@ import ar.edu.uade.desa1.domain.response.SendVerificationCodeResponse;
 import ar.edu.uade.desa1.domain.response.VerifyCodeResponse;
 import ar.edu.uade.desa1.exception.NotFoundException;
 import ar.edu.uade.desa1.exception.UserAlreadyExistsException;
+import ar.edu.uade.desa1.repository.PasswordResetTokenRepository;
 import ar.edu.uade.desa1.repository.RoleRepository;
 import ar.edu.uade.desa1.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -25,6 +27,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Random;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +42,7 @@ public class AuthServiceImpl implements AuthService {
     private final RoleRepository roleRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final PasswordResetTokenRepository tokenRepository;
 
     private final EmailService emailService;
     
@@ -93,11 +97,6 @@ public class AuthServiceImpl implements AuthService {
         return new AuthLoginResponse(true, token, true, null);
     }
 
-    
-    /*
-     * @Autowired
-    private PasswordResetTokenRepository tokenRepository;
-
     public void recoverPassword(String email) {
         User user = userRepository.findByEmail(email)
         .orElseThrow(() -> new RuntimeException("No existe un usuario con ese email."));
@@ -108,9 +107,7 @@ public class AuthServiceImpl implements AuthService {
         resetToken.setUser(user);
         resetToken.setExpiryDate(LocalDateTime.now().plusHours(1));
         tokenRepository.save(resetToken);
-
-        // Simulación de envío por email
-        System.out.println("Token de recuperación para " + email + ": " + token);
+        emailService.sendRecoverEmail(user.getEmail(), user.getFirstName(), token);
     }   
 
     public void resetPassword(String token, String newPassword) {
@@ -127,7 +124,7 @@ public class AuthServiceImpl implements AuthService {
         tokenRepository.delete(resetToken);
     }
     
-     */
+
     
 
     @Override
