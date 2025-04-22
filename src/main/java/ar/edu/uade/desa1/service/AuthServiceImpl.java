@@ -35,6 +35,7 @@ public class AuthServiceImpl implements AuthService {
 
     public static final String USER_REGISTERED_SUCCESSFULLY = "Usuario registrado satisfactoriamente";
     public static final String EMAIL_VERIFIED_SUCCESSFULLY = "Email verificado satisfactoriamente.";
+    public static final String OTP_VERIFIED_SUCCESSFULLY = "El OTP se ha verificado correctamente.";
     public static final String INVALID_VERIFICATION_CODE = "Código de verificación inválido o expirado.";
     public static final String EMAIL_ALREADY_VERIFIED = "Email ya verificado.";
     
@@ -97,42 +98,21 @@ public class AuthServiceImpl implements AuthService {
         return new AuthLoginResponse(true, token, true, null);
     }
 
-    public void recoverPassword(String email) {
+    public void resetPassword(String email, String newPassword) {
         User user = userRepository.findByEmail(email)
-        .orElseThrow(() -> new RuntimeException("No existe un usuario con ese email."));
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
-        String token = UUID.randomUUID().toString();
-        PasswordResetToken resetToken = new PasswordResetToken();
-        resetToken.setToken(token);
-        resetToken.setUser(user);
-        resetToken.setExpiryDate(LocalDateTime.now().plusHours(1));
-        tokenRepository.save(resetToken);
-        emailService.sendRecoverEmail(user.getEmail(), user.getFirstName(), token);
-    }   
-
-    public void resetPassword(String token, String newPassword) {
-        PasswordResetToken resetToken = tokenRepository.findByToken(token)
-            .orElseThrow(() -> new RuntimeException("Token inválido."));
-
-        if (resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("El token ha expirado.");
-        }
-
-        User user = resetToken.getUser();
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
-        tokenRepository.delete(resetToken);
     }
-    
 
-    
 
     @Override
     public VerifyCodeResponse verifyCode(VerifyCodeRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new NotFoundException("Usuario con email " + request.getEmail() + " no encontrado"));
         
-        if (user.getEmailVerified() != null && user.getEmailVerified()) {
+        if (!request.getRecoverPassword() && user.getEmailVerified() != null && user.getEmailVerified()) {
             return VerifyCodeResponse.builder()
                     .success(true)
                     .message(EMAIL_ALREADY_VERIFIED)
@@ -145,9 +125,11 @@ public class AuthServiceImpl implements AuthService {
             user.getVerificationCode().equals(request.getVerificationCode()) && 
             user.getVerificationCodeExpiry() != null && 
             now.isBefore(user.getVerificationCodeExpiry())) {
-            
-            user.setEmailVerified(true);
-            user.setActive(true);
+
+            if (!request.getRecoverPassword()) {
+                user.setEmailVerified(true);
+                user.setActive(true);
+            }
             user.setVerificationCode(null);
             user.setVerificationCodeExpiry(null);
             
@@ -155,7 +137,7 @@ public class AuthServiceImpl implements AuthService {
             
             return VerifyCodeResponse.builder()
                     .success(true)
-                    .message(EMAIL_VERIFIED_SUCCESSFULLY)
+                    .message(OTP_VERIFIED_SUCCESSFULLY)
                     .build();
         }
         
@@ -170,7 +152,8 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new NotFoundException("Usuario con email " + request.getEmail() + " no encontrado"));
 
-        if (user.getEmailVerified() != null && user.getEmailVerified()) {
+
+        if (user.getEmailVerified() != null && user.getEmailVerified() && !request.getRecoverPassword()) {
             return SendVerificationCodeResponse.builder()
                     .success(false)
                     .message(EMAIL_ALREADY_VERIFIED)
@@ -183,8 +166,8 @@ public class AuthServiceImpl implements AuthService {
         user.setVerificationCode(verificationCode);
         user.setVerificationCodeExpiry(verificationCodeExpiry);
         userRepository.save(user);
-
-        emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), verificationCode);
+        emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(),
+                request.getRecoverPassword() ? "Password" : "Verifica tu Email", verificationCode);
 
         return SendVerificationCodeResponse.builder()
                 .success(true)
