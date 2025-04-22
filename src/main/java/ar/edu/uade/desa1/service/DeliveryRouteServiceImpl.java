@@ -144,10 +144,6 @@ public class DeliveryRouteServiceImpl implements DeliveryRouteService {
         try {
             List<DeliveryRoute> routes = deliveryRouteRepository.findByUserIdAndStatus(userId, RouteStatus.COMPLETED.toString());
 
-            if (routes.isEmpty()) {
-                throw new NotFoundException("No completed routes found");
-            }
-
             return routes.stream().map(route -> DeliveryRouteResponse.builder()
                     .id(route.getId())
                     .userInfo(route.getUser().getFirstName() + " " + route.getUser().getLastName())
