@@ -27,7 +27,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(request));
     }
 
-/*
+
     @PostMapping("/recover")
     public ResponseEntity<String> recoverPassword(@RequestBody PasswordRecoveryRequest request) {
         authService.recoverPassword(request.getEmail());
@@ -39,7 +39,7 @@ public class AuthController {
         authService.resetPassword(request.getToken(), request.getNewPassword());
         return ResponseEntity.ok("Contraseña actualizada correctamente.");
     }
-*/
+
     @PostMapping("/verify-code")
     public ResponseEntity<VerifyCodeResponse> verifyCode(@RequestBody VerifyCodeRequest request) {
         return ResponseEntity.ok(authService.verifyCode(request));
