@@ -5,20 +5,23 @@ import ar.edu.uade.desa1.domain.response.AuthLoginResponse;
 import ar.edu.uade.desa1.domain.response.AuthRegisterResponse;
 import ar.edu.uade.desa1.domain.response.SendVerificationCodeResponse;
 import ar.edu.uade.desa1.domain.response.VerifyCodeResponse;
+import ar.edu.uade.desa1.service.AuthService;
 import ar.edu.uade.desa1.service.AuthServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import javax.management.relation.RoleNotFoundException;
 
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthServiceImpl authService;
+    private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthRegisterResponse> register(@RequestBody AuthRegisterRequest request) {
+    public ResponseEntity<AuthRegisterResponse> register(@RequestBody AuthRegisterRequest request) throws RoleNotFoundException {
         return ResponseEntity.ok(authService.register(request));
     }
 
@@ -27,19 +30,13 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(request));
     }
 
-/*
-    @PostMapping("/recover")
-    public ResponseEntity<String> recoverPassword(@RequestBody PasswordRecoveryRequest request) {
-        authService.recoverPassword(request.getEmail());
-        return ResponseEntity.ok("Se ha enviado un token de recuperación.");
-    }
 
     @PostMapping("/reset-password")
     public ResponseEntity<String> resetPassword(@RequestBody PasswordResetRequest request) {
-        authService.resetPassword(request.getToken(), request.getNewPassword());
+        authService.resetPassword(request.getEmail(), request.getNewPassword());
         return ResponseEntity.ok("Contraseña actualizada correctamente.");
     }
-*/
+
     @PostMapping("/verify-code")
     public ResponseEntity<VerifyCodeResponse> verifyCode(@RequestBody VerifyCodeRequest request) {
         return ResponseEntity.ok(authService.verifyCode(request));

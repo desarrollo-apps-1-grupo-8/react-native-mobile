@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 public class VerifyCodeRequest {
     private String email;
     private String verificationCode;
+    private Boolean recoverPassword;
 } 

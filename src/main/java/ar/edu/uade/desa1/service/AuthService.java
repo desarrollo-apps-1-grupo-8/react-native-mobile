@@ -17,4 +17,7 @@ public interface AuthService {
     AuthLoginResponse login(AuthLoginRequest request);
     VerifyCodeResponse verifyCode(VerifyCodeRequest request);
     SendVerificationCodeResponse sendVerificationCode(SendVerificationCodeRequest request);
+
+    void resetPassword(String token, String newPassword);
+
 }

@@ -9,4 +9,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SendVerificationCodeRequest {
     private String email;
-} 
+    private Boolean recoverPassword;
+}
