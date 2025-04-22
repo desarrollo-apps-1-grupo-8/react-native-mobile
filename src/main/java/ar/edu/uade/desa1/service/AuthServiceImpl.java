@@ -5,10 +5,12 @@ import ar.edu.uade.desa1.domain.entity.Role;
 import ar.edu.uade.desa1.domain.entity.User;
 import ar.edu.uade.desa1.domain.request.AuthLoginRequest;
 import ar.edu.uade.desa1.domain.request.AuthRegisterRequest;
+import ar.edu.uade.desa1.domain.request.SendVerificationCodeRequest;
+import ar.edu.uade.desa1.domain.request.VerifyCodeRequest;
 import ar.edu.uade.desa1.domain.response.AuthLoginResponse;
-import ar.edu.uade.desa1.domain.request.VerifyEmailRequest;
 import ar.edu.uade.desa1.domain.response.AuthRegisterResponse;
-import ar.edu.uade.desa1.domain.response.VerifyEmailResponse;
+import ar.edu.uade.desa1.domain.response.SendVerificationCodeResponse;
+import ar.edu.uade.desa1.domain.response.VerifyCodeResponse;
 import ar.edu.uade.desa1.exception.NotFoundException;
 import ar.edu.uade.desa1.exception.UserAlreadyExistsException;
 import ar.edu.uade.desa1.repository.RoleRepository;
@@ -53,10 +55,6 @@ public class AuthServiceImpl implements AuthService {
         Role role = roleRepository.findById((request.getRoleId()))
                 .orElseThrow(() -> new NotFoundException("Role id " + request.getRoleId() + " does not exists."));
 
-        // Generate verification code
-        String verificationCode = generateVerificationCode();
-        LocalDateTime verificationCodeExpiry = LocalDateTime.now().plusMinutes(expirationMinutes);
-        
         User user = User.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
@@ -65,16 +63,11 @@ public class AuthServiceImpl implements AuthService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(role)
-                .active("false")
-                .verificationCode(verificationCode)
-                .verificationCodeExpiry(verificationCodeExpiry)
+                .active(false)
                 .emailVerified(false)
                 .build();
 
         User savedUser = userRepository.save(user);
-        
-        // Send verification email
-        emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), verificationCode);
 
         return AuthRegisterResponse.builder()
                 .message(USER_REGISTERED_SUCCESSFULLY)
@@ -86,14 +79,18 @@ public class AuthServiceImpl implements AuthService {
     public AuthLoginResponse login(AuthLoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
             .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
-    
+
+        if (!user.getEmailVerified()) {
+            return new AuthLoginResponse(false, null, false, "NEEDS_VERIFICATION");
+        }
+
+
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new BadCredentialsException("Contraseña incorrecta");
         }
     
         String token = jwtUtil.generateToken(user);
-    
-        return new AuthLoginResponse(true, token);//se genera y devuelve el token y success = verdadero
+        return new AuthLoginResponse(true, token, true, null);
     }
 
     
@@ -134,12 +131,12 @@ public class AuthServiceImpl implements AuthService {
     
 
     @Override
-    public VerifyEmailResponse verifyEmail(VerifyEmailRequest request) {
+    public VerifyCodeResponse verifyCode(VerifyCodeRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new NotFoundException("Usuario con email " + request.getEmail() + " no encontrado"));
         
         if (user.getEmailVerified() != null && user.getEmailVerified()) {
-            return VerifyEmailResponse.builder()
+            return VerifyCodeResponse.builder()
                     .success(true)
                     .message(EMAIL_ALREADY_VERIFIED)
                     .build();
@@ -153,24 +150,51 @@ public class AuthServiceImpl implements AuthService {
             now.isBefore(user.getVerificationCodeExpiry())) {
             
             user.setEmailVerified(true);
-            user.setActive("true");
+            user.setActive(true);
             user.setVerificationCode(null);
             user.setVerificationCodeExpiry(null);
             
             userRepository.save(user);
             
-            return VerifyEmailResponse.builder()
+            return VerifyCodeResponse.builder()
                     .success(true)
                     .message(EMAIL_VERIFIED_SUCCESSFULLY)
                     .build();
         }
         
-        return VerifyEmailResponse.builder()
+        return VerifyCodeResponse.builder()
                 .success(false)
                 .message(INVALID_VERIFICATION_CODE)
                 .build();
     }
-    
+
+    @Override
+    public SendVerificationCodeResponse sendVerificationCode(SendVerificationCodeRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new NotFoundException("Usuario con email " + request.getEmail() + " no encontrado"));
+
+        if (user.getEmailVerified() != null && user.getEmailVerified()) {
+            return SendVerificationCodeResponse.builder()
+                    .success(false)
+                    .message(EMAIL_ALREADY_VERIFIED)
+                    .build();
+        }
+
+        String verificationCode = generateVerificationCode();
+        LocalDateTime verificationCodeExpiry = LocalDateTime.now().plusMinutes(expirationMinutes);
+
+        user.setVerificationCode(verificationCode);
+        user.setVerificationCodeExpiry(verificationCodeExpiry);
+        userRepository.save(user);
+
+        emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), verificationCode);
+
+        return SendVerificationCodeResponse.builder()
+                .success(true)
+                .message("Código de verificación enviado correctamente")
+                .build();
+    }
+
     private String generateVerificationCode() {
         Random random = new Random();
         int code = 100000 + random.nextInt(900000);
