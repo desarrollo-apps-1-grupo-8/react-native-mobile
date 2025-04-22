@@ -25,7 +25,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .headers(headers -> headers.frameOptions(frame -> frame.disable()))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/h2-console/**", "/api/v1/register", "/api/v1/verify-code","/api/v1/send-verification-code", "/api/v1/login", "/api/v1/routes/**", "/api/v1/recover", "/api/v1/reset-password").permitAll()
+                .requestMatchers("/h2-console/**", "/api/v1/register", "/api/v1/verify-code","/api/v1/send-verification-code", "/api/v1/login", "/api/v1/routes/**").permitAll()
                 .anyRequest().authenticated()
             )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
