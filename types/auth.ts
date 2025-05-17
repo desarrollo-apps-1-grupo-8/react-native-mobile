@@ -1,0 +1,1 @@
+//Define los tipos como LoginRequest, LoginResponse
