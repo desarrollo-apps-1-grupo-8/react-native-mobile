@@ -1,9 +1,9 @@
 //	Pantalla principal de login (UI y lógica)
-import api from '@/services/api'; //importamos api aca de api.ts
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import api from '@/services/api';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -11,6 +11,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Función de login con control de errores
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Error', 'Por favor completá todos los campos');
@@ -19,16 +20,26 @@ export default function LoginScreen() {
 
     try {
       setLoading(true);
-      const response = await api.post('/login', { email, password }); // aca se usa api del archivo api.ts
 
-      const token = response.data.token;
+      const response = await api.post('/login', { email, password });
+      const data = response.data;
+
+      if (!data.success) {
+        if (data.status === 'NEEDS_VERIFICATION') {
+          Alert.alert('Verificación requerida', 'Tu cuenta aún no fue verificada.');
+        } else {
+          Alert.alert('Error', 'Credenciales incorrectas.');
+        }
+        return;
+      }
+
+      const token = data.token;
       await AsyncStorage.setItem('token', token);
-      console.log('Token recibido:', token);
+      router.replace('(tabs)');
 
-      router.replace('/(tabs)'); // Reemplazá con la ruta correcta si tu home es diferente
     } catch (error: any) {
       console.error(error);
-      Alert.alert('Error', 'Credenciales incorrectas o error de red');
+      Alert.alert('Error', 'No se pudo conectar al servidor.');
     } finally {
       setLoading(false);
     }
@@ -36,16 +47,16 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>LOGIN</Text>
+      <Text style={styles.title}>INICIAR SESIÓN</Text>
 
       <View style={styles.card}>
-        <Text style={styles.welcome}>Welcome back</Text>
-        <Text style={styles.subtitle}>Login to your account to continue</Text>
+        <Text style={styles.welcome}>Bienvenido de nuevo</Text>
+        <Text style={styles.subtitle}>Iniciá sesión para continuar</Text>
 
-        <Text style={styles.label}>Email</Text>
+        <Text style={styles.label}>Correo electrónico</Text>
         <TextInput
           style={styles.input}
-          placeholder="john@example.com"
+          placeholder="tuCorreo@mail.com"
           placeholderTextColor="#aaa"
           autoCapitalize="none"
           keyboardType="email-address"
@@ -54,9 +65,9 @@ export default function LoginScreen() {
         />
 
         <View style={styles.passwordRow}>
-          <Text style={styles.label}>Password</Text>
-          <Pressable onPress={() => Alert.alert('Recuperación', 'Funcionalidad no implementada')}>
-            <Text style={styles.forgot}>Forgot password?</Text>
+          <Text style={styles.label}>Contraseña</Text>
+          <Pressable onPress={() => Alert.alert('Función no disponible', 'La recuperación no está implementada.')}>
+            <Text style={styles.forgot}>¿Olvidaste tu contraseña?</Text>
           </Pressable>
         </View>
         <TextInput
@@ -69,14 +80,14 @@ export default function LoginScreen() {
         />
 
         <Pressable style={styles.button} onPress={handleLogin} disabled={loading}>
-          <Text style={styles.buttonText}>{loading ? 'Logging in...' : 'Login'}</Text>
+          <Text style={styles.buttonText}>{loading ? 'Ingresando...' : 'Ingresar'}</Text>
         </Pressable>
 
-        {/* Comentado porque todavía no existe la pantalla */}
-        {/* 
+        {/* Comentado porque la pantalla aún no está creada */}
+        {/*
         <Pressable onPress={() => router.push('register')}>
           <Text style={styles.registerText}>
-            No tenes una cuenta? <Text style={{ textDecorationLine: 'underline' }}>Register</Text>
+            ¿No tenés una cuenta? <Text style={{ textDecorationLine: 'underline' }}>Registrate</Text>
           </Text>
         </Pressable>
         */}
@@ -85,7 +96,7 @@ export default function LoginScreen() {
   );
 }
 
-// 🎨 Estilos
+// Estilos
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -162,4 +173,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
 
