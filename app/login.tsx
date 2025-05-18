@@ -35,7 +35,7 @@ export default function LoginScreen() {
 
       const token = data.token;
       await AsyncStorage.setItem('token', token);
-      router.replace('(tabs)');
+      router.replace('(tabs)/shipments');
 
     } catch (error: any) {
       console.error(error);
