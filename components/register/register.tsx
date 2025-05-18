@@ -20,23 +20,11 @@ export default function RegisterScreen() {
     }, 1000);
   };
 
-  const handleVerify = async (code: string) => {
-    // Aquí va la lógica para verificar el código con el backend
-    Alert.alert('Código ingresado', code);
-    // Si es correcto,  redirigi a la pantalla que necesitamos
-  };
-
-  const handleResendCode = async () => {
-    // Aca la lógica para reenviar el código
-    Alert.alert('Código reenviado', `Se envió un nuevo código a ${email}`);
-  };
-
   if (showOTP) {
     return (
       <OTPVerification
         email={email}
-        onVerify={handleVerify}
-        onResendCode={handleResendCode}
+        isPasswordRecovery={false}
       />
     );
   }
