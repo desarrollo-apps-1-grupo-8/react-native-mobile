@@ -1,4 +1,4 @@
-import OTPVerification from '@/components/register/otp/OTPVerification';
+import OTPVerification from '@/components/otp/OTPVerification';
 import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
