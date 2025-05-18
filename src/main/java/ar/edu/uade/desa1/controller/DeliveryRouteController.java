@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/api/v1/routes")
@@ -50,4 +51,9 @@ public class DeliveryRouteController {
     public ResponseEntity<List<DeliveryRouteResponse>> getCompletedRoutes(@PathVariable("userId") Long userId) {
         return ResponseEntity.ok(deliveryRouteService.getCompletedRoutesByUser(userId));
     }
+
+    @GetMapping("/visible")
+    public ResponseEntity<List<DeliveryRoute>> getVisibleRoutes(Authentication authentication) {
+    return ResponseEntity.ok(deliveryRouteService.getRoutesForAuthenticatedUser(authentication));
+}
 }
