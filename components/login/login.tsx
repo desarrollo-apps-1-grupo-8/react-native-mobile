@@ -1,6 +1,7 @@
 //	Pantalla principal de login (UI y lógica)
 import { useSession } from '@/context/SessionContext';
 import api from '@/services/api';
+import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -15,6 +16,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showOTP, setShowOTP] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleVerifyOTP = async (code: string) => {
     try {
@@ -112,16 +114,28 @@ export default function LoginScreen() {
         </View>
         <View style={styles.inputGroup}>
           <View style={styles.passwordHeader}>
-          <Text style={styles.label}>Password</Text>
-        </View>
-        <TextInput
-          style={styles.input}
-          placeholder="••••••••"
-          placeholderTextColor="#666"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+            <Text style={styles.label}>Contraseña</Text>
+          </View>
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={[styles.input, styles.passwordInput]}
+              placeholder="••••••••"
+              placeholderTextColor="#666"
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
+            />
+            <Pressable
+              style={styles.eyeButton}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              <Ionicons
+                name={showPassword ? "eye-off" : "eye"}
+                size={24}
+                color="#666"
+              />
+            </Pressable>
+          </View>
         </View>
         <Pressable onPress={() => Alert.alert('Función no disponible', 'La recuperación no está implementada.')}>
             <Text style={styles.forgotPassword}>¿Olvidaste tu contraseña?</Text>
@@ -216,5 +230,18 @@ const styles = StyleSheet.create({
   registerLink: {
     color: 'white',
     textDecorationLine: 'underline',
-  }
+  },
+  passwordContainer: {
+    position: 'relative',
+  },
+  passwordInput: {
+    paddingRight: 48,
+  },
+  eyeButton: {
+    position: 'absolute',
+    right: 12,
+    top: '50%',
+    transform: [{ translateY: -12 }],
+    zIndex: 1,
+  },
 });
