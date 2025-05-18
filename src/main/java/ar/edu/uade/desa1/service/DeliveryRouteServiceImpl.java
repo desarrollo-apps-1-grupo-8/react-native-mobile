@@ -11,6 +11,7 @@ import ar.edu.uade.desa1.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.Authentication;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -159,4 +160,37 @@ public class DeliveryRouteServiceImpl implements DeliveryRouteService {
             throw new RuntimeException("Error getting completed routes by user: " + e.getMessage());
         }
     }
+
+
+    @Override
+public List<DeliveryRouteResponse> getRoutesForAuthenticatedUser(Authentication authentication){
+    String email = authentication.getName(); // viene del token
+
+    User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+    String role = user.getRole().getName();
+
+    List<DeliveryRoute> routes;
+
+    if (role.equalsIgnoreCase("Repartidor")) {
+        routes = deliveryRouteRepository.findAll();
+    } else {
+        routes = deliveryRouteRepository.findByUserId(user.getId());
+    }
+
+    return routes.stream().map(route -> DeliveryRouteResponse.builder()
+            .id(route.getId())
+            .packageInfo(route.getPackageInfo())
+            .origin(route.getOrigin())
+            .destination(route.getDestination())
+            .status(route.getStatus())
+            .userInfo(route.getUser() != null ? route.getUser().getFirstName() + " " + route.getUser().getLastName() : null)
+            .deliveryUserInfo(route.getDeliveryUser() != null ? route.getDeliveryUser().getFirstName() + " " + route.getDeliveryUser().getLastName() : "Sin asignar")
+            .createdAt(route.getCreatedAt())
+            .updatedAt(route.getUpdatedAt())
+            .build()
+    ).toList();
+}
+
 }
