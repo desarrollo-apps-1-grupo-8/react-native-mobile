@@ -35,7 +35,8 @@ public class SecurityConfig {
                                 "/api/v1/login",
                                 "/api/v1/reset-password",
                                 "/api/v1/send-verification-code",
-                                "/api/v1/verify-code"
+                                "/api/v1/verify-code",
+                                "/api/v1/validate-reset-token"
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.POST, "/api/v1/routes/update-status").hasRole(REPARTIDOR)

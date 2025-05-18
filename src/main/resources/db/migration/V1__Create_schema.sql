@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS users (
     verification_code VARCHAR(64),
     verification_code_expiry TIMESTAMP,
     email_verified BOOLEAN,
+    reset_token VARCHAR(255),
+    reset_token_expiry TIMESTAMP,
     FOREIGN KEY (role_id) REFERENCES roles(id)
 );
 
@@ -36,11 +38,3 @@ CREATE TABLE IF NOT EXISTS routes (
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (delivery_user_id) REFERENCES users(id)
 );
-
-CREATE TABLE IF NOT EXISTS password_reset_token (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    token VARCHAR(255) NOT NULL UNIQUE,
-    user_id BIGINT NOT NULL,
-    expiry_date TIMESTAMP NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-); 

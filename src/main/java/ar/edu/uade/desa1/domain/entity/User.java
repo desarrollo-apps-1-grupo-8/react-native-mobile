@@ -50,6 +50,12 @@ public class User implements UserDetails {
 
     @Column(name = "active")
     private Boolean active;
+
+    @Column
+    private String resetToken;
+
+    @Column
+    private LocalDateTime resetTokenExpiry;
     
     @Column(name = "verification_code", length = 64)
     private String verificationCode;
