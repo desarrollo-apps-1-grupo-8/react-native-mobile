@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class VerifyCodeResponse {
     private boolean success;
     private String message;
+    private String resetToken;
 } 

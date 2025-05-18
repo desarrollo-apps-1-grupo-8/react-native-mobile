@@ -4,9 +4,9 @@ import ar.edu.uade.desa1.domain.request.*;
 import ar.edu.uade.desa1.domain.response.AuthLoginResponse;
 import ar.edu.uade.desa1.domain.response.AuthRegisterResponse;
 import ar.edu.uade.desa1.domain.response.SendVerificationCodeResponse;
+import ar.edu.uade.desa1.domain.response.ValidateResetTokenResponse;
 import ar.edu.uade.desa1.domain.response.VerifyCodeResponse;
 import ar.edu.uade.desa1.service.AuthService;
-import ar.edu.uade.desa1.service.AuthServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,7 +33,7 @@ public class AuthController {
 
     @PostMapping("/reset-password")
     public ResponseEntity<String> resetPassword(@RequestBody PasswordResetRequest request) {
-        authService.resetPassword(request.getEmail(), request.getNewPassword());
+        authService.resetPassword(request);
         return ResponseEntity.ok("Contraseña actualizada correctamente.");
     }
 
@@ -45,5 +45,10 @@ public class AuthController {
     @PostMapping("/send-verification-code")
     public ResponseEntity<SendVerificationCodeResponse> sendVerificationCode(@RequestBody SendVerificationCodeRequest request) {
         return ResponseEntity.ok(authService.sendVerificationCode(request));
+    }
+
+    @PostMapping("/validate-reset-token")
+    public ResponseEntity<ValidateResetTokenResponse> validateResetToken(@RequestBody ValidateResetTokenRequest request) {
+        return ResponseEntity.ok(authService.validateResetToken(request));
     }
 }

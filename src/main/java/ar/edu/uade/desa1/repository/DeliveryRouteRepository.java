@@ -1,7 +1,6 @@
 package ar.edu.uade.desa1.repository;
 
 import ar.edu.uade.desa1.domain.entity.DeliveryRoute;
-import ar.edu.uade.desa1.domain.enums.RouteStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
