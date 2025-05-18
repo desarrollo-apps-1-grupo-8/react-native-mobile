@@ -2,18 +2,18 @@ import api from '@/services/api';
 import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 interface OTPVerificationProps {
   email: string;
+  isPasswordRecovery?: boolean;
 }
 
 type VerificationStatus = 'idle' | 'success' | 'error';
 
-export default function OTPVerification({ email }: OTPVerificationProps) {
-  const navigation = useNavigation<NativeStackNavigationProp<any>>();
+export default function OTPVerification({ email, isPasswordRecovery}: OTPVerificationProps) {
+  const navigation = useNavigation<any>();
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [resendDisabled, setResendDisabled] = useState(false);
@@ -144,7 +144,7 @@ export default function OTPVerification({ email }: OTPVerificationProps) {
       const response = await api.post('/verify-code', { 
         email, 
         verificationCode: verificationCode,
-        recoverPassword: false
+        recoverPassword: isPasswordRecovery
       });
 
       if (response.data.success) {
@@ -152,11 +152,20 @@ export default function OTPVerification({ email }: OTPVerificationProps) {
         setStatusMessage('Tu cuenta ha sido verificada correctamente');
         animateStatus(true);
         setTimeout(() => {
-          navigation.navigate('Login' as never);
-          navigation.reset({
-            index: 0,
-            routes: [{ name: 'Login' as never }],
-          });
+          const targetScreen = isPasswordRecovery ? 'ResetPassword' : 'Login';
+          if (isPasswordRecovery) {
+            navigation.navigate(targetScreen as never, { email } as never);
+            navigation.reset({
+              index: 0,
+              routes: [{ name: targetScreen as never, params: { email } }],
+            });
+          } else {
+            navigation.navigate(targetScreen as never);
+            navigation.reset({
+              index: 0,
+              routes: [{ name: targetScreen as never }],
+            });
+          }
         }, 1500);
       } else {
         setVerificationStatus('error');
@@ -189,7 +198,7 @@ export default function OTPVerification({ email }: OTPVerificationProps) {
         await AsyncStorage.setItem('otp_last_resend', now.toString());
       }
       
-      const response = await api.post('/send-verification-code', { email, recoverPassword: false });
+      const response = await api.post('/send-verification-code', { email, recoverPassword: isPasswordRecovery });
       
       if (response.data.success) {
         if (isResend) {

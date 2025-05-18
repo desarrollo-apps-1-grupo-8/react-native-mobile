@@ -4,44 +4,18 @@ import api from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import OTPVerification from '../otp/OTPVerification';
 
 export default function LoginScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<any>>()
+  const navigation = useNavigation<any>()
   const { signIn } = useSession();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showOTP, setShowOTP] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
-  const handleVerifyOTP = async (code: string) => {
-    try {
-      const response = await api.post('/verify-otp', { email, code });
-      const data = response.data;
-
-      if (data.success) {
-        const token = data.token;
-        await AsyncStorage.setItem('token', token);
-        signIn(token);
-      } else {
-        Alert.alert('Error', 'Código inválido');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'No se pudo verificar el código');
-    }
-  };
-
-  const handleResendOTP = async () => {
-    try {
-      await api.post('/resend-otp', { email });
-    } catch (error) {
-      Alert.alert('Error', 'No se pudo reenviar el código');
-    }
-  };
 
   // Función de login con control de errores
   const handleLogin = async () => {
@@ -137,7 +111,7 @@ export default function LoginScreen() {
             </Pressable>
           </View>
         </View>
-        <Pressable onPress={() => Alert.alert('Función no disponible', 'La recuperación no está implementada.')}>
+        <Pressable onPress={() => navigation.navigate('ForgotPassword')}>
             <Text style={styles.forgotPassword}>¿Olvidaste tu contraseña?</Text>
           </Pressable>
 

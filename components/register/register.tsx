@@ -148,7 +148,12 @@ export default function RegisterScreen() {
   };
 
   if (showOTP) {
-    return <OTPVerification email={email} />;
+    return (
+      <OTPVerification
+        email={email}
+        isPasswordRecovery={false}
+      />
+    );
   }
 
   return (
