@@ -12,7 +12,7 @@ interface OTPVerificationProps {
 
 type VerificationStatus = 'idle' | 'success' | 'error';
 
-export default function OTPVerification({ email, isPasswordRecovery}: OTPVerificationProps) {
+export default function OTPVerification({ email, isPasswordRecovery = false}: OTPVerificationProps) {
   const navigation = useNavigation<any>();
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
@@ -56,6 +56,7 @@ export default function OTPVerification({ email, isPasswordRecovery}: OTPVerific
       return () => clearTimeout(timer);
     } else if (resendDisabled && countdown === 0) {
       setResendDisabled(false);
+      AsyncStorage.removeItem('otp_last_resend');
     }
   }, [resendDisabled, countdown]);
 
@@ -154,10 +155,11 @@ export default function OTPVerification({ email, isPasswordRecovery}: OTPVerific
         setTimeout(() => {
           const targetScreen = isPasswordRecovery ? 'ResetPassword' : 'Login';
           if (isPasswordRecovery) {
-            navigation.navigate(targetScreen as never, { email } as never);
+            const resetToken = response.data.resetToken;
+            navigation.navigate(targetScreen as never, { email, resetToken } as never);
             navigation.reset({
               index: 0,
-              routes: [{ name: targetScreen as never, params: { email } }],
+              routes: [{ name: targetScreen as never, params: { email, resetToken } }],
             });
           } else {
             navigation.navigate(targetScreen as never);
@@ -188,7 +190,7 @@ export default function OTPVerification({ email, isPasswordRecovery}: OTPVerific
   };
 
   const handleSendCode = async (isResend = false) => {
-    if (resendDisabled) return;
+    if (resendDisabled && isResend) return;
     
     try {
       if (isResend) {
@@ -197,12 +199,12 @@ export default function OTPVerification({ email, isPasswordRecovery}: OTPVerific
         const now = Date.now();
         await AsyncStorage.setItem('otp_last_resend', now.toString());
       }
-      
       const response = await api.post('/send-verification-code', { email, recoverPassword: isPasswordRecovery });
-      
+
       if (response.data.success) {
         if (isResend) {
           setStatusMessage('Se ha enviado un nuevo código a tu correo');
+          setVerificationStatus('idle');
           setCode(['', '', '', '', '', '']);
           inputRefs.current[0]?.focus();
         }
@@ -211,9 +213,12 @@ export default function OTPVerification({ email, isPasswordRecovery}: OTPVerific
       }
     } catch (error: any) {
       setStatusMessage(error.message || 'No se pudo enviar el código');
+      setVerificationStatus('error');
+      animateStatus(true);
       if (isResend) {
         setResendDisabled(false);
         setCountdown(0);
+        await AsyncStorage.removeItem('otp_last_resend');
       }
     }
   };

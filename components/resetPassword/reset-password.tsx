@@ -1,17 +1,57 @@
 import api from '@/services/api';
 import { useNavigation } from '@react-navigation/native';
 import { isAxiosError } from 'axios';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Loader from '../Loader';
  
-export default function ResetPasswordScreen({ route }: { route: { params: { email: string } } }) {
+interface ResetPasswordParams {
+  email: string;
+  resetToken: string;
+}
+
+export default function ResetPasswordScreen({ route }: { route: { params: ResetPasswordParams } }) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { email } = route.params;
-  const navigate = useNavigation<any>();
+  const [isTokenValid, setIsTokenValid] = useState(false);
+  const { email, resetToken } = route.params;
+  const navigation = useNavigation<any>();
+
+  useEffect(() => {
+    validateResetToken();
+  }, []);
+
+  const validateResetToken = async () => {
+    try {
+      const response = await api.post('/validate-reset-token', {
+        email,
+        reset_token: resetToken
+      });
+
+      if (!response.data.valid) {
+        Alert.alert('Error', 'La recuperación ha expirado o no es válidA');
+        navigation.navigate('Login' as never);
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Login' as never }],
+        });
+      } else {
+        setIsTokenValid(true);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'La recuperación ha expirado o no es válida');
+      navigation.navigate('Login');
+    }
+  };
  
   const handleResetPassword = async () => {
+    if (!isTokenValid) {
+      Alert.alert('Error', 'Token de recuperación inválido');
+      navigation.navigate('Login');
+      return;
+    }
+
     if (!password || !confirmPassword) {
       Alert.alert('Error', 'Completa todos los campos.');
       return;
@@ -28,10 +68,11 @@ export default function ResetPasswordScreen({ route }: { route: { params: { emai
       await api.post('/reset-password', {
         email,
         newPassword: password,
+        resetToken
       });
  
       Alert.alert('Éxito', 'Contraseña actualizada.');
-      navigate.navigate('Login');
+      navigation.navigate('Login');
     } catch (error) {
       if (isAxiosError(error)) {
         Alert.alert('Error', error.response?.data?.message || 'No se pudo actualizar la contraseña.');
@@ -43,13 +84,21 @@ export default function ResetPasswordScreen({ route }: { route: { params: { emai
     }
   };
  
+  if (!isTokenValid) {
+    return (
+      <View style={styles.container}>
+        <Loader />
+      </View>
+    );
+  }
+
   return (
-<View style={styles.container}>
-<Text style={styles.title}>Nueva contraseña</Text>
-<Text style={styles.subtitle}>Correo: {email}</Text>
-<View style={styles.inputGroup}>
-<Text style={styles.label}>Nueva contraseña</Text>
-<TextInput
+    <View style={styles.container}>
+      <Text style={styles.title}>Nueva contraseña</Text>
+      <Text style={styles.subtitle}>Correo: {email}</Text>
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Nueva contraseña</Text>
+        <TextInput
           style={styles.input}
           placeholder="••••••••"
           placeholderTextColor="#666"
@@ -57,10 +106,10 @@ export default function ResetPasswordScreen({ route }: { route: { params: { emai
           value={password}
           onChangeText={setPassword}
         />
-</View>
-<View style={styles.inputGroup}>
-<Text style={styles.label}>Confirmar contraseña</Text>
-<TextInput
+      </View>
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Confirmar contraseña</Text>
+        <TextInput
           style={styles.input}
           placeholder="••••••••"
           placeholderTextColor="#666"
@@ -68,19 +117,19 @@ export default function ResetPasswordScreen({ route }: { route: { params: { emai
           value={confirmPassword}
           onChangeText={setConfirmPassword}
         />
-</View>
+      </View>
  
       <TouchableOpacity 
         style={styles.loginButton} 
         onPress={handleResetPassword} 
         disabled={loading}
->
+      >
         {loading ? 
-<ActivityIndicator color="#000" /> : 
-<Text style={styles.loginButtonText}>Restablecer</Text>
+          <ActivityIndicator color="#000" /> : 
+          <Text style={styles.loginButtonText}>Restablecer</Text>
         }
-</TouchableOpacity>
-</View>
+      </TouchableOpacity>
+    </View>
   );
 }
  
