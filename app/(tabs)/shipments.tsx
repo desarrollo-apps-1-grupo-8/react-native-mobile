@@ -1,15 +1,16 @@
-import api from '@/services/api';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextStyle, View } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, Pressable, TextStyle } from 'react-native';
+import api from '@/services/api';
 
 type Route = {
   id: number;
-  estimatedDeliveryDate: string;
-  shippedDate: string;
-  deliveryAddress: string;
-  clientName: string;
-  carrier: string;
+  packageInfo: string;
+  origin: string;
+  destination: string;
   status: string;
+  userInfo: string;
+  deliveryUserInfo: string;
+  createdAt: string;
 };
 
 export default function ShipmentsScreen() {
@@ -33,9 +34,9 @@ export default function ShipmentsScreen() {
 
   const getStatusStyle = (status: string): TextStyle => ({
     color:
-      status === 'Delivered'
+      status === 'DELIVERED'
         ? '#4caf50'
-        : status === 'In Transit'
+        : status === 'IN_PROGRESS'
         ? '#2196f3'
         : '#ffc107',
     marginTop: 4,
@@ -44,18 +45,18 @@ export default function ShipmentsScreen() {
 
   const renderItem = ({ item }: { item: Route }) => (
     <View style={styles.card}>
-      <Text style={styles.routeId}>{item.carrier.toUpperCase()}-{item.id}</Text>
-      <Text style={styles.label}>Entrega estimada: {item.estimatedDeliveryDate}</Text>
-      <Text style={styles.label}>Fecha de envío: {item.shippedDate}</Text>
-      <Text style={styles.label}>Dirección: {item.deliveryAddress}</Text>
-      <Text style={styles.label}>Cliente: {item.clientName}</Text>
-      <Text style={styles.label}>Transportista: {item.carrier}</Text>
+      <Text style={styles.routeId}>
+        {item.deliveryUserInfo?.toUpperCase() || 'SIN TRANSPORTISTA'}-{item.id}
+      </Text>
+      <Text style={styles.label}>Envío: {item.packageInfo}</Text>
+      <Text style={styles.label}>Fecha de creación: {item.createdAt}</Text>
+      <Text style={styles.label}>Origen: {item.origin}</Text>
+      <Text style={styles.label}>Destino: {item.destination}</Text>
+      <Text style={styles.label}>Cliente: {item.userInfo}</Text>
+      <Text style={styles.label}>Transportista: {item.deliveryUserInfo}</Text>
       <Text style={getStatusStyle(item.status)}>{item.status}</Text>
 
       <View style={styles.buttons}>
-        <Pressable style={styles.button}>
-          <Text style={styles.buttonText}>Ver detalle</Text>
-        </Pressable>
         <Pressable style={styles.button}>
           <Text style={styles.buttonText}>Cambiar estado</Text>
         </Pressable>
@@ -72,6 +73,14 @@ export default function ShipmentsScreen() {
     );
   }
 
+  if (routes.length === 0) {
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyText}>Todavía no tenés rutas asignadas.</Text>
+      </View>
+    );
+  }
+
   return (
     <FlatList
       contentContainerStyle={styles.container}
@@ -80,6 +89,7 @@ export default function ShipmentsScreen() {
       renderItem={renderItem}
     />
   );
+
 }
 
 const styles = StyleSheet.create({
@@ -124,5 +134,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#111',
   },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#111',
+  },
+  emptyText: {
+    color: '#ccc',
+    fontSize: 16,
+    fontStyle: 'italic',
+  },
 });
+
 
