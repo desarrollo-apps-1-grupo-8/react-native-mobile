@@ -50,7 +50,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public AuthRegisterResponse register(AuthRegisterRequest request) {
 
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+        if (userRepository.findByEmail(request.getEmail().toLowerCase()).isPresent()) {
             throw new UserAlreadyExistsException(request.getEmail());
         }
 
@@ -79,7 +79,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthLoginResponse login(AuthLoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
+        User user = userRepository.findByEmail(request.getEmail().toLowerCase())
             .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
         if (!user.getEmailVerified()) {
@@ -96,7 +96,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     public void resetPassword(String email, String newPassword) {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email.toLowerCase())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
         user.setPassword(passwordEncoder.encode(newPassword));
@@ -106,7 +106,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public VerifyCodeResponse verifyCode(VerifyCodeRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
+        User user = userRepository.findByEmail(request.getEmail().toLowerCase())
                 .orElseThrow(() -> new NotFoundException("Usuario con email " + request.getEmail() + " no encontrado"));
         
         if (!request.getRecoverPassword() && user.getEmailVerified() != null && user.getEmailVerified()) {
@@ -146,7 +146,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public SendVerificationCodeResponse sendVerificationCode(SendVerificationCodeRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
+        User user = userRepository.findByEmail(request.getEmail().toLowerCase())
                 .orElseThrow(() -> new NotFoundException("Usuario con email " + request.getEmail() + " no encontrado"));
 
 

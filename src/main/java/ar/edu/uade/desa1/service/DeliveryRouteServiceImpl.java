@@ -166,7 +166,7 @@ public class DeliveryRouteServiceImpl implements DeliveryRouteService {
 public List<DeliveryRouteResponse> getRoutesForAuthenticatedUser(Authentication authentication){
     String email = authentication.getName(); // viene del token
 
-    User user = userRepository.findByEmail(email)
+    User user = userRepository.findByEmail(email.toLowerCase())
         .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
     String role = user.getRole().getName();
