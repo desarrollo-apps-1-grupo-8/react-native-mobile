@@ -53,7 +53,8 @@ public class DeliveryRouteController {
     }
 
     @GetMapping("/visible")
-    public ResponseEntity<List<DeliveryRoute>> getVisibleRoutes(Authentication authentication) {
-    return ResponseEntity.ok(deliveryRouteService.getRoutesForAuthenticatedUser(authentication));
+    public ResponseEntity<List<DeliveryRouteResponse>> getVisibleRoutes(Authentication authentication) {
+        return ResponseEntity.ok(deliveryRouteService.getRoutesForAuthenticatedUser(authentication));
+    }
 }
-}
+

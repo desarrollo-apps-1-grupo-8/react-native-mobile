@@ -161,19 +161,36 @@ public class DeliveryRouteServiceImpl implements DeliveryRouteService {
         }
     }
 
+
     @Override
-    public List<DeliveryRoute> getRoutesForAuthenticatedUser(Authentication authentication) {
-        String email = authentication.getName(); // viene del token
+public List<DeliveryRouteResponse> getRoutesForAuthenticatedUser(Authentication authentication){
+    String email = authentication.getName(); // viene del token
 
-        User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+    User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        String role = user.getRole().getName();
+    String role = user.getRole().getName();
 
-        if (role.equals("ROLE_REPARTIDOR")) {
-            return deliveryRouteRepository.findAll(); // Si es repartidor ve todas las rutas
+    List<DeliveryRoute> routes;
+
+    if (role.equalsIgnoreCase("Repartidor")) {
+        routes = deliveryRouteRepository.findAll();
     } else {
-        return deliveryRouteRepository.findByUserId(user.getId()); // Si es usaurio ve solamente sus rutas
+        routes = deliveryRouteRepository.findByUserId(user.getId());
     }
+
+    return routes.stream().map(route -> DeliveryRouteResponse.builder()
+            .id(route.getId())
+            .packageInfo(route.getPackageInfo())
+            .origin(route.getOrigin())
+            .destination(route.getDestination())
+            .status(route.getStatus())
+            .userInfo(route.getUser() != null ? route.getUser().getFirstName() + " " + route.getUser().getLastName() : null)
+            .deliveryUserInfo(route.getDeliveryUser() != null ? route.getDeliveryUser().getFirstName() + " " + route.getDeliveryUser().getLastName() : "Sin asignar")
+            .createdAt(route.getCreatedAt())
+            .updatedAt(route.getUpdatedAt())
+            .build()
+    ).toList();
 }
+
 }
