@@ -2,7 +2,6 @@
 import { useSession } from "@/context/SessionContext";
 import api from "@/services/api";
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState } from "react";
@@ -32,10 +31,9 @@ export default function RegisterScreen() {
   const [currentStep, setCurrentStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [userType, setUserType] = useState<'usuario' | 'repartidor'>('usuario');
+  const [userType, setUserType] = useState<1 | 2>(1);
 
   const formatDNI = (value: string) => {
-    // Eliminar todos los caracteres no numéricos
     const numbers = value.replace(/\D/g, '');
     
     // Aplicar el formato xx.xxx.xxx
@@ -59,34 +57,8 @@ export default function RegisterScreen() {
   };
 
   const handlePhoneChange = (value: string) => {
-    // Eliminar todos los caracteres no numéricos
     const numbers = value.replace(/\D/g, '');
     setPhone(numbers);
-  };
-
-  const handleVerifyOTP = async (code: string) => {
-    try {
-      const response = await api.post("/verify-otp", { email, code });
-      const data = response.data;
-
-      if (data.success) {
-        const token = data.token;
-        await AsyncStorage.setItem("token", token);
-        signIn(token);
-      } else {
-        Alert.alert("Error", "Código inválido");
-      }
-    } catch (error) {
-      Alert.alert("Error", "No se pudo verificar el código");
-    }
-  };
-
-  const handleResendOTP = async () => {
-    try {
-      await api.post("/resend-otp", { email });
-    } catch (error) {
-      Alert.alert("Error", "No se pudo reenviar el código");
-    }
   };
 
   const handleRegister = async () => {
@@ -98,31 +70,16 @@ export default function RegisterScreen() {
     try {
       setLoading(true);
 
-      const response = await api.post("/register", { email, password });
-      const data = response.data;
-      if (!data.success) {
-        if (data.status === "NEEDS_VERIFICATION") {
-          Alert.alert(
-            "Verificación requerida",
-            "Tu cuenta aún no fue verificada.",
-            [
-              {
-                text: "OK",
-                onPress: () => {
-                  setShowOTP(true);
-                },
-              },
-            ]
-          );
-        } else {
-          Alert.alert("Error", "Credenciales incorrectas.");
-        }
-        return;
-      }
-
-      const token = data.token;
-      await AsyncStorage.setItem("token", token);
-      signIn(token);
+      await api.post("/register", { 
+        email, 
+        password, 
+        firstName, 
+        lastName, 
+        dni: dni.replace(/\./g, ''), 
+        phone, 
+        roleId: userType 
+      });
+      setShowOTP(true);
     } catch (error: any) {
       console.error(error);
       if (error.response?.data?.message) {
@@ -134,6 +91,14 @@ export default function RegisterScreen() {
       setLoading(false);
     }
   };
+
+  if (showOTP) {
+    return (
+      <OTPVerification
+        email={email}
+      />
+    );
+  }
 
   const handleNextStep = () => {
     if (!firstName || !lastName || !dni || !phone) {
@@ -220,26 +185,26 @@ export default function RegisterScreen() {
                 <Pressable
                   style={[
                     styles.userTypeButton,
-                    userType === 'usuario' && styles.userTypeButtonActive
+                    userType === 1 && styles.userTypeButtonActive
                   ]}
-                  onPress={() => setUserType('usuario')}
+                  onPress={() => setUserType(1)}
                 >
                   <Text style={[
                     styles.userTypeButtonText,
-                    userType === 'usuario' && styles.userTypeButtonTextActive
-                  ]}>Usuario</Text>
+                    userType === 1 && styles.userTypeButtonTextActive
+                  ]}>Repartidor</Text>
                 </Pressable>
                 <Pressable
                   style={[
                     styles.userTypeButton,
-                    userType === 'repartidor' && styles.userTypeButtonActive
+                    userType === 2 && styles.userTypeButtonActive
                   ]}
-                  onPress={() => setUserType('repartidor')}
+                  onPress={() => setUserType(2)}
                 >
                   <Text style={[
                     styles.userTypeButtonText,
-                    userType === 'repartidor' && styles.userTypeButtonTextActive
-                  ]}>Repartidor</Text>
+                    userType === 2 && styles.userTypeButtonTextActive
+                  ]}>Usuario</Text>
                 </Pressable>
               </View>
             </View>
@@ -323,7 +288,7 @@ export default function RegisterScreen() {
               </Pressable>
               <Pressable
                 style={styles.registerButton}
-                //onPress={handleRegister}
+                onPress={handleRegister}
                 disabled={loading}
               >
                 <Text style={styles.registerButtonText}>
