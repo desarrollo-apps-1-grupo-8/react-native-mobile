@@ -14,7 +14,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
+ /* useEffect(() => {
     const initializeSession = async () => {
       try {
         const token = await SecureStore.getItemAsync('session');
@@ -27,6 +27,25 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     };
 
     initializeSession();
+  }, []); */
+
+
+  ////////////////////////   BORRAR
+  useEffect(() => {
+  const initializeSession = async () => {
+    try {
+      const mockToken = 'dev-token';
+      setSession(mockToken);
+      // Opción: guardalo en SecureStore si querés persistirlo
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };      
+  ////////////////////////
+
+  initializeSession();
   }, []);
 
   const signIn = (token: string) => {
