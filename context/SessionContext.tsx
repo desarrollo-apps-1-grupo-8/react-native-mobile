@@ -27,7 +27,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     };
 
     initializeSession();
-  }, []);
+  }, []); 
 
   const signIn = (token: string) => {
     setSession(token);
