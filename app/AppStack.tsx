@@ -1,13 +1,53 @@
+
+import HistoryScreen from '@/components/history/history';
+import ProfileScreen from '@/components/profile/profile';
+import MyRoutesScreen from '@/components/routes/myRoutes';
 import ShipmentsScreen from '@/components/shipments/shipments';
+import { useSession } from '@/context/SessionContext';
+import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-// import your main app screens here
 
 const Tab = createBottomTabNavigator();
 
 export default function AppStack() {
+  const { session } = useSession();
+  const isDeliveryRole = session?.user?.rol === 'repartidor';   /// Verifica si el rol es repartidor ACOMODAR
+
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false }}>
-           <Tab.Screen name="Home" component={ShipmentsScreen} />
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarStyle: { backgroundColor: 'black' },
+        tabBarActiveTintColor: 'white',
+        tabBarInactiveTintColor: 'white',
+        tabBarIcon: ({ color, size }) => {
+          let iconName: string;
+
+          switch (route.name) {
+            case 'Shipments':
+              iconName = 'cube-outline';
+              break;
+            case 'MyRoutes':
+              iconName = 'map-outline';
+              break;
+            case 'History':
+              iconName = 'time-outline';
+              break;
+            case 'Profile':
+              iconName = 'person-outline';
+              break;
+            default:
+              iconName = 'ellipse-outline';
+          }
+
+          return <Ionicons name={iconName as any} size={size} color={color} />;
+        },
+      })}
+    >
+      <Tab.Screen name="Shipments" component={ShipmentsScreen} />
+      {isDeliveryRole && <Tab.Screen name="MyRoutes" component={MyRoutesScreen} />}
+      <Tab.Screen name="History" component={HistoryScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
 }
