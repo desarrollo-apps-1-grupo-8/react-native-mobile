@@ -39,6 +39,28 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     await SecureStore.deleteItemAsync('session');
   };
 
+  const getUserRoleFromToken = (): string | null => {
+    try {
+      let token = getAccessToken();
+      if (!token) return null;
+
+      if (token.startsWith("Bearer ")) {
+        token = token.substring(7);
+      }
+
+      const parts = token.split(".");
+      if (parts.length !== 3) return null;
+
+      const payload = JSON.parse(
+        atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"))
+      );
+      return payload.role || null;
+    } catch (e) {
+      console.error("Error getting role from token:", e);
+      return null;
+    }
+  };
+
   return (
     <SessionContext.Provider value={{ session, isLoading, signIn, signOut }}>
       {children}
@@ -53,3 +75,4 @@ export function useSession() {
   }
   return context;
 } 
+

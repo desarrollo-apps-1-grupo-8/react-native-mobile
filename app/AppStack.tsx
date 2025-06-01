@@ -11,14 +11,14 @@ const Tab = createBottomTabNavigator();
 
 export default function AppStack() {
   const { session } = useSession();
-  const isDeliveryRole = session?.user?.rol === 'repartidor';   /// Verifica si el rol es repartidor ACOMODAR
+  const isDeliveryRole = getUserRoleFromToken();   /// Verifica si el rol es repartidor ACOMODAR
 
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: { backgroundColor: 'black' },
-        tabBarActiveTintColor: 'white',
+        tabBarActiveTintColor: 'grey',
         tabBarInactiveTintColor: 'white',
         tabBarIcon: ({ color, size }) => {
           let iconName: string;
@@ -50,4 +50,8 @@ export default function AppStack() {
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
+}
+
+function getUserRoleFromToken() {
+  throw new Error('Function not implemented.');
 }
