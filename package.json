@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "axios": "^1.9.0",
+    "react-native-toast-notifications": "^3.4.0"
+  }
+}
