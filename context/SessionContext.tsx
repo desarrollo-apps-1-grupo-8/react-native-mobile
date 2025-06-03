@@ -13,7 +13,7 @@ const SessionContext = createContext<SessionContextProps | undefined>(undefined)
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
+  
   useEffect(() => {
     const initializeSession = async () => {
       try {
@@ -39,7 +39,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     await SecureStore.deleteItemAsync('session');
   };
 
-  const getUserRoleFromToken = (): string | null => {
+  const getUserRoleFromToken = (): string | null => {    /////////////############ ????
     try {
       let token = getAccessToken();
       if (!token) return null;
@@ -59,7 +59,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       console.error("Error getting role from token:", e);
       return null;
     }
-  };
+  };  
 
   return (
     <SessionContext.Provider value={{ session, isLoading, signIn, signOut }}>
