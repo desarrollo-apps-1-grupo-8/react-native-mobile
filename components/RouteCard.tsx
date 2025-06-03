@@ -12,7 +12,7 @@ interface Props {
 export const RouteCard: React.FC<Props> = ({ route, role, onAction }) => {
   const isRepartidor = role === "REPARTIDOR";
   const status = route.status;
-  const statusSpanish = RouteStatusEnum[status]?.spanish || status;
+  const statusSpanish = RouteStatusEnum[status as keyof typeof RouteStatusEnum]?.spanish || status;
 
   return (
     <View style={{ margin: 10, padding: 10, backgroundColor: "#fff", borderRadius: 8 }}>
