@@ -1,7 +1,7 @@
 import axios from "axios";
 import { DeliveryRouteResponseWithUserInfo } from "../types/route";
 
-const API_URL = "http://TU_BACKEND_URL/api/v1/routes";
+const API_URL = "http://localhost:8080/api/v1/routes";
 
 export const getRoutesByUserId = (userId: number, token: string) =>
   axios.get<DeliveryRouteResponseWithUserInfo[]>(`${API_URL}/user/${userId}`, {
