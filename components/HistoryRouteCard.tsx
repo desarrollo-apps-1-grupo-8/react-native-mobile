@@ -8,7 +8,7 @@ interface Props {
 }
 
 export const HistoryRouteCard: React.FC<Props> = ({ route }) => {
-  const statusSpanish = RouteStatusEnum[route.status]?.spanish || route.status;
+  const statusSpanish = RouteStatusEnum[route.status as keyof typeof RouteStatusEnum]?.spanish || route.status;
   const onlyDate = route.updatedAt.split("T")[0];
 
   return (
