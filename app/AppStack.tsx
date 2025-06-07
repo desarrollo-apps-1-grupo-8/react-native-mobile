@@ -6,6 +6,7 @@ import ShipmentsScreen from '@/components/shipments/shipments';
 import { useSession } from '@/context/SessionContext';
 import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import Toast from 'react-native-toast-message';
 
 const Tab = createBottomTabNavigator();
 
