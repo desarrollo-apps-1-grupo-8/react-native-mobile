@@ -10,6 +10,7 @@ import OTPVerification from '../otp/OTPVerification';
 import Toast from 'react-native-toast-message';
 import LottieView from 'lottie-react-native';
 import * as Haptics from 'expo-haptics';
+import * as Animatable from 'react-native-animatable';
 
 export default function LoginScreen() {
   const navigation = useNavigation<any>()
@@ -20,6 +21,7 @@ export default function LoginScreen() {
   const [showOTP, setShowOTP] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const successAnim = useRef<LottieView>(null);
+  const formRef = useRef(null);
 
 
 
@@ -90,7 +92,12 @@ export default function LoginScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <Animatable.View
+        ref={formRef}
+        style={styles.container}
+        duration={500}
+        easing="ease-in-out"
+      >
       <View style={styles.formContainer}></View>
       <Text style={styles.title}>Inicio de sesión</Text>
       <Text style={styles.subtitle}>Iniciá sesión para continuar</Text>
@@ -151,12 +158,11 @@ export default function LoginScreen() {
             source={require('../../assets/animations/success.json')}
             autoPlay={false}
             loop={false}
-            style={{ width: 150, height: 150, alignSelf: 'center', position: 'absolute', top: '40%' }}
+            style={{ width: 350, height: 350, alignSelf: 'center', position: 'absolute', top: '40%' }}
           />
 
           <Toast />
-
-    </View>
+    </Animatable.View>
   );
 }
 
