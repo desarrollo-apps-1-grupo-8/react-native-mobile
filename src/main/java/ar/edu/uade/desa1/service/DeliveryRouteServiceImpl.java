@@ -16,6 +16,8 @@ import org.springframework.security.core.Authentication;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static java.util.stream.Collectors.toList;
+
 @Service
 @RequiredArgsConstructor
 public class DeliveryRouteServiceImpl implements DeliveryRouteService {
@@ -72,16 +74,21 @@ public class DeliveryRouteServiceImpl implements DeliveryRouteService {
         try {
             var routes = deliveryRouteRepository.findByUserId(userId);
 
-            return routes.stream().map(route -> DeliveryRouteResponse.builder()
+            return routes.stream().map(route -> {
+                var deliveryUserInfo = route.getDeliveryUser();
+                return DeliveryRouteResponse.builder()
                     .id(route.getId())
                     .userInfo(route.getUser().getFirstName() + " " + route.getUser().getLastName())
                     .packageInfo(route.getPackageInfo())
+                    .deliveryUserInfo(deliveryUserInfo != null ? deliveryUserInfo.getFirstName() + " " + deliveryUserInfo.getLastName() : null)
                     .origin(route.getOrigin())
                     .destination(route.getDestination())
                     .createdAt(route.getCreatedAt())
                     .updatedAt(route.getUpdatedAt())
                     .status(route.getStatus())
-                    .build()).toList();
+                    .build();
+            }
+                ).toList();
         } catch (Exception e) {
             throw new RuntimeException("Error getting all routes for user: " + e.getMessage());
         }
@@ -161,36 +168,23 @@ public class DeliveryRouteServiceImpl implements DeliveryRouteService {
         }
     }
 
-
     @Override
-public List<DeliveryRouteResponse> getRoutesForAuthenticatedUser(Authentication authentication){
-    String email = authentication.getName(); // viene del token
+    public List<DeliveryRouteResponse> getAllRoutesByDeliveryUserId(Long deliveryUserId) {
+        try {
+            var routes = deliveryRouteRepository.findByDeliveryUserId(deliveryUserId);
 
-    User user = userRepository.findByEmail(email.toLowerCase())
-        .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
-    String role = user.getRole().getName();
-
-    List<DeliveryRoute> routes;
-
-    if (role.equalsIgnoreCase("Repartidor")) {
-        routes = deliveryRouteRepository.findAll();
-    } else {
-        routes = deliveryRouteRepository.findByUserId(user.getId());
-    }
-
-    return routes.stream().map(route -> DeliveryRouteResponse.builder()
-            .id(route.getId())
-            .packageInfo(route.getPackageInfo())
-            .origin(route.getOrigin())
-            .destination(route.getDestination())
-            .status(route.getStatus())
-            .userInfo(route.getUser() != null ? route.getUser().getFirstName() + " " + route.getUser().getLastName() : null)
-            .deliveryUserInfo(route.getDeliveryUser() != null ? route.getDeliveryUser().getFirstName() + " " + route.getDeliveryUser().getLastName() : "Sin asignar")
-            .createdAt(route.getCreatedAt())
-            .updatedAt(route.getUpdatedAt())
-            .build()
-    ).toList();
-}
-
+            return routes.stream().map(route -> DeliveryRouteResponse.builder()
+                    .id(route.getId())
+                    .userInfo(route.getUser().getFirstName() + " " + route.getUser().getLastName())
+                    .packageInfo(route.getPackageInfo())
+                    .origin(route.getOrigin())
+                    .destination(route.getDestination())
+                    .createdAt(route.getCreatedAt())
+                    .updatedAt(route.getUpdatedAt())
+                    .status(route.getStatus())
+                    .build()).toList();
+        } catch (Exception e) {
+            throw new RuntimeException("Error getting all routes for delivery user: " + e.getMessage());
+        }    
+  }
 }
