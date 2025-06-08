@@ -1,60 +1,118 @@
-
-
-import HistoryScreen from '@/components/history/history';
-import ProfileScreen from '@/components/profile/profile';
-import MyRoutesScreen from '@/components/routes/myRoutes';
-import ShipmentsScreen from '@/components/shipments/shipments';
-import { useSession } from '@/context/SessionContext';
-import { Ionicons } from '@expo/vector-icons';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Toast from 'react-native-toast-message';
-
+import ProfileScreen from "@/components/profile/profile";
+import { useSession } from "@/context/SessionContext";
+import { HistoryScreen } from "@/screens/HistoryScreen";
+import { MyRoutesScreen } from "@/screens/MyRoutesScreen";
+import { RoutesScreen } from "@/screens/RoutesScreen";
+import { RoleEnum } from "@/utils/roleEnum";
+import { Ionicons } from "@expo/vector-icons";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Platform } from "react-native";
 
 const Tab = createBottomTabNavigator();
 
 export default function AppStack() {
-  const { role } = useSession();
+  const { user } = useSession();
 
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarStyle: { backgroundColor: "black" },
-        tabBarActiveTintColor: "black",
-        tabBarActiveBackgroundColor: "darkgrey",
-        tabBarInactiveTintColor: "white",
-        tabBarIcon: ({ color, size }) => {
+        tabBarStyle: {
+          backgroundColor: "#18181b",
+          borderTopWidth: 0,
+          elevation: 20,
+          shadowColor: "#000000",
+          shadowOffset: {
+            width: 0,
+            height: -4,
+          },
+          shadowOpacity: 0.3,
+          shadowRadius: 8,
+          height: Platform.OS === "ios" ? 85 : 100,
+          paddingBottom: Platform.OS === "ios" ? 30 : 30,
+          paddingTop: 5,
+        },
+        tabBarActiveTintColor: "#ECEDEE",
+        tabBarInactiveTintColor: "#9BA1A6",
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: "600",
+          marginTop: 4,
+        },
+        tabBarIconStyle: {
+          marginTop: 4,
+        },
+        tabBarItemStyle: {
+          paddingVertical: 5,
+        },
+        tabBarIcon: ({ color, size, focused }) => {
           let iconName: string;
+          const iconSize = focused ? size + 4 : size;
 
           switch (route.name) {
             case "Shipments":
-              iconName = "cube-outline";
+              iconName = focused ? "cube" : "cube-outline";
               break;
             case "MyRoutes":
-              iconName = "map-outline";
+              iconName = focused ? "map" : "map-outline";
               break;
             case "History":
-              iconName = "time-outline";
+              iconName = focused ? "time" : "time-outline";
               break;
             case "Profile":
-              iconName = "person-outline";
+              iconName = focused ? "person" : "person-outline";
               break;
             default:
               iconName = "ellipse-outline";
           }
 
-          return <Ionicons name={iconName as any} size={size} color={color} />;
+          return (
+            <Ionicons 
+              name={iconName as any} 
+              size={iconSize} 
+              color={color}
+              style={{
+                textShadowColor: focused ? "rgba(236, 237, 238, 0.3)" : "transparent",
+                textShadowOffset: { width: 0, height: 2 },
+                textShadowRadius: 4,
+              }}
+            />
+          );
         },
       })}
     >
-      <Tab.Screen name="Shipments" component={RoutesScreen} />
-      {role === RoleEnum.REPARTIDOR && (
+      <Tab.Screen 
+        name="Shipments" 
+        component={RoutesScreen}
+        options={{
+          tabBarLabel: "Shipments",
+        }}
+      />
+      {user?.role === RoleEnum.REPARTIDOR && (
         <>
-          <Tab.Screen name="MyRoutes" component={MyRoutesScreen} />
-          <Tab.Screen name="History" component={HistoryScreen} />
+          <Tab.Screen 
+            name="MyRoutes" 
+            component={MyRoutesScreen}
+            options={{
+              tabBarLabel: "My Routes",
+            }}
+          />
+          <Tab.Screen 
+            name="History" 
+            component={HistoryScreen}
+            options={{
+              tabBarLabel: "History",
+            }}
+          />
         </>
       )}
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen 
+        name="Profile" 
+        component={ProfileScreen}
+        options={{
+          tabBarLabel: "Profile",
+        }}
+      />
     </Tab.Navigator>
   );
 }

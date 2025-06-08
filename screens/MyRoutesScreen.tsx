@@ -16,7 +16,7 @@ import { useSession } from "../context/SessionContext";
 import { DeliveryRouteResponseWithUserInfo } from "../types/route";
 
 export const MyRoutesScreen: React.FC = () => {
-  const { session, userId } = useSession();
+  const { session, user } = useSession();
   const [routes, setRoutes] = useState<DeliveryRouteResponseWithUserInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const insets = useSafeAreaInsets();
@@ -26,7 +26,9 @@ export const MyRoutesScreen: React.FC = () => {
     setLoading(true);
     try {
       let response;
-      response = await api.get(`/routes/deliveryUser/${userId}`);
+      response = await api.get(`/routes/deliveryUser/${user?.id}`);
+      console.log(response)
+
       setRoutes(response.data);
     } catch (error: any) {
       console.error("Error al obtener las rutas:", error);
@@ -34,7 +36,7 @@ export const MyRoutesScreen: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [session, userId]);
+  }, [session, user]);
 
   useFocusEffect(
     useCallback(() => {
@@ -52,7 +54,7 @@ export const MyRoutesScreen: React.FC = () => {
       await api.post(`/routes/update-status`, {
         deliveryRouteId,
         status,
-        deliveryUserId: userId,
+        deliveryUserId: user?.id,
       });
     } catch (error: any) {
       console.error("Error al cambiar estado de la ruta:", error);

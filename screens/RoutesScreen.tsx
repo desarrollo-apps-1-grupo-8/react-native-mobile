@@ -1,6 +1,6 @@
 import api from "@/services/api";
-import { useFocusEffect } from "@react-navigation/native";
-import React, { useCallback, useState } from "react";
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import React, { useCallback, useEffect, useState } from "react";
 import {
   FlatList,
   RefreshControl,
@@ -16,7 +16,7 @@ import { DeliveryRouteResponseWithUserInfo } from "../types/route";
 import { RoleEnum } from "../utils/roleEnum";
 
 export const RoutesScreen: React.FC = () => {
-  const { session, userId, role } = useSession();
+  const { session, user } = useSession();
   const [routes, setRoutes] = useState<DeliveryRouteResponseWithUserInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const insets = useSafeAreaInsets();
@@ -26,10 +26,11 @@ export const RoutesScreen: React.FC = () => {
     setLoading(true);
     try {
       let response;
-      if (role === RoleEnum.REPARTIDOR) {
+
+      if (user?.role === RoleEnum.REPARTIDOR) {
         response = await api.get(`/routes`);
       } else {
-        response = await api.get(`/routes/user/${userId}`);
+        response = await api.get(`/routes/user/${user?.id}`);
       }
       setRoutes(response.data);
     } catch (error: any) {
@@ -38,29 +39,27 @@ export const RoutesScreen: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [session, userId, role]);
+  }, [session, user]);
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchRoutes();
-    }, [fetchRoutes])
-  );
+  useEffect(() => {
+    fetchRoutes();
+  }, []);
 
   const handleChangeRouteStatus = async (
     deliveryRouteId: number,
     status: string
   ) => {
-    console.log("test!")
     setLoading(true);
     try {
-      if (role === RoleEnum.REPARTIDOR) {
+      if (user?.role === RoleEnum.REPARTIDOR) {
         await api.post(`/routes/update-status`, {
           deliveryRouteId,
           status,
-          deliveryUserId: userId,
+          deliveryUserId: user?.id,
         });
       }
     } catch (error: any) {
+      console.log("ocurrio un error")
       console.error("Error al cambiar estado de la ruta:", error);
     } finally {
       setLoading(false);
@@ -78,23 +77,25 @@ export const RoutesScreen: React.FC = () => {
           }
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
-            <View
-              style={{
-                flex: 1,
-                justifyContent: "center",
-                alignItems: "center",
-                marginTop: 20,
-              }}
-            >
-              <Text style={{ textAlign: "center", color: "#fff" }}>
-                No hay rutas disponibles
+            <View style={styles.emptyContainer}>
+              <MaterialIcons 
+                name="route" 
+                size={64} 
+                color="#666666" 
+                style={styles.emptyIcon}
+              />
+              <Text style={styles.emptySubtitle}>
+                {user?.role === RoleEnum.REPARTIDOR 
+                  ? "No tienes rutas asignadas en este momento."
+                  : "No tienes envíos en este momento."
+                }
               </Text>
             </View>
           }
           renderItem={({ item }) => (
             <RouteCard
               route={item}
-              role={role || ""}
+              role={user?.role || ""}
               onPress={(routeId: number, status: string) => handleChangeRouteStatus(routeId, status)}
             />
           )}
@@ -116,5 +117,30 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: 24,
     paddingHorizontal: 0,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    minHeight: 300,
+    paddingHorizontal: 24,
+  },
+  emptyIcon: {
+    marginBottom: 20,
+    opacity: 0.7,
+  },
+  emptyTitle: {
+    textAlign: "center",
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "600",
+    marginBottom: 12,
+  },
+  emptySubtitle: {
+    textAlign: "center",
+    color: "#999999",
+    fontSize: 16,
+    lineHeight: 24,
+    maxWidth: 280,
   },
 });

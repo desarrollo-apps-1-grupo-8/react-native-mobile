@@ -4,12 +4,28 @@ import { createContext, ReactNode, useContext, useEffect, useState } from 'react
 interface SessionContextProps {
   session: boolean | null;
   isLoading: boolean;
-  role: string | null;
-  userId: string | null;
+  user: User | null;
   signIn: (token: string) => Promise<void>;
   signOut: () => Promise<void>;
   getUserId: () => Promise<string | null>;
-  getUserRoleFromToken: () => Promise<string | null>;
+}
+
+type User = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+type TokenPayload = {
+  id: string;
+  sub: string; // email
+  role: string;
+  first_name?: string;
+  firstName?: string;
+  name?: string;
+  exp?: number;
+  iat?: number;
 }
 
 const SessionContext = createContext<SessionContextProps | undefined>(undefined);
@@ -17,9 +33,37 @@ const SessionContext = createContext<SessionContextProps | undefined>(undefined)
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [role, setRole] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  
+  const decodeToken = (token: string): TokenPayload | null => {
+    try {
+      let tokenValue = token;
+      if (tokenValue.startsWith('Bearer ')) {
+        tokenValue = tokenValue.substring(7);
+      }
+
+      const parts = tokenValue.split('.');
+      if (parts.length !== 3) return null;
+
+      const payload = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
+      return JSON.parse(payload) as TokenPayload;
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      return null;
+    }
+  };
+
+  const createUserFromPayload = (payload: TokenPayload): User => {
+    const name = payload.first_name || payload.firstName || payload.name || 'Usuario';
+    
+    return {
+      id: payload.id,
+      name: name,
+      email: payload.sub,
+      role: payload.role,
+    };
+  };
   
   const initializeSession = async () => {
     if (isInitialized) return;
@@ -27,21 +71,24 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     try {
       const token = await SecureStore.getItemAsync('session');
       if (token) {
-        setSession(true);
-        const userRole = await getUserRoleFromToken();
-        const id = await getUserId();
-        setRole(userRole);
-        setUserId(id);
+        const payload = decodeToken(token);
+        if (payload) {
+          const userData = createUserFromPayload(payload);
+          setUser(userData);
+          setSession(true);
+        } else {
+          await SecureStore.deleteItemAsync('session');
+          setSession(false);
+          setUser(null);
+        }
       } else {
         setSession(false);
-        setRole(null);
-        setUserId(null);
+        setUser(null);
       }
     } catch (error) {
       console.error('Error initializing session:', error);
       setSession(false);
-      setRole(null);
-      setUserId(null);
+      setUser(null);
     } finally {
       setIsLoading(false);
       setIsInitialized(true);
@@ -52,28 +99,15 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     initializeSession();
   }, []); 
 
-  const getUserId = async () => {
+  const getUserId = async (): Promise<string | null> => {
     try {
       const token = await SecureStore.getItemAsync('session');
       if (!token) return null;
 
-      let tokenValue = token;
-      if (tokenValue.startsWith('Bearer ')) {
-        tokenValue = tokenValue.substring(7);
-      }
-
-      const parts = tokenValue.split('.');
-      if (parts.length !== 3) {
-        console.log('Token no tiene formato JWT válido');
-        return null;
-      }
-
-      const payload = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
-      const json = JSON.parse(payload);
-
-      return json.id;
+      const payload = decodeToken(token);
+      return payload?.id || null;
     } catch (error) {
-      console.error('Error al obtener ID del token:', error);
+      console.error('Error getting user ID from token:', error);
       return null;
     }
   };
@@ -81,14 +115,20 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const signIn = async (token: string) => {
     try {
       const formattedToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+      
+      // Decode and validate token before storing
+      const payload = decodeToken(formattedToken);
+      if (!payload) {
+        throw new Error('Invalid token format');
+      }
+
       await SecureStore.setItemAsync('session', formattedToken);
+      
+      const userData = createUserFromPayload(payload);
+      setUser(userData);
       setSession(true);
-      const userRole = await getUserRoleFromToken();
-      const id = await getUserId();
-      setRole(userRole);
-      setUserId(id);
     } catch (error) {
-      console.error('Error al guardar token:', error);
+      console.error('Error signing in:', error);
       throw error;
     }
   };
@@ -97,39 +137,15 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     try {
       await SecureStore.deleteItemAsync('session');
       setSession(false);
-      setRole(null);
-      setUserId(null);
+      setUser(null);
     } catch (error) {
-      console.error('Error al cerrar sesión:', error);
+      console.error('Error signing out:', error);
       throw error;
     }
   };
 
-  const getUserRoleFromToken = async (): Promise<string | null> => {
-    try {
-      const token = await SecureStore.getItemAsync('session');
-      if (!token) return null;
-
-      let tokenValue = token;
-      if (tokenValue.startsWith('Bearer ')) {
-        tokenValue = tokenValue.substring(7);
-      }
-
-      const parts = tokenValue.split('.');
-      if (parts.length !== 3) return null;
-
-      const payload = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
-      const json = JSON.parse(payload);
-      
-      return json.role || null;
-    } catch (e) {
-      console.error('Error getting role from token:', e);
-      return null;
-    }
-  };  
-
   return (
-    <SessionContext.Provider value={{ session, isLoading, role, userId, signIn, signOut, getUserId, getUserRoleFromToken }}>
+    <SessionContext.Provider value={{ session, isLoading, user, signIn, signOut, getUserId }}>
       {children}
     </SessionContext.Provider>
   );
