@@ -5,11 +5,14 @@ import ar.edu.uade.desa1.domain.entity.Role;
 import ar.edu.uade.desa1.domain.entity.User;
 import ar.edu.uade.desa1.domain.request.AuthLoginRequest;
 import ar.edu.uade.desa1.domain.request.AuthRegisterRequest;
+import ar.edu.uade.desa1.domain.request.PasswordResetRequest;
 import ar.edu.uade.desa1.domain.request.SendVerificationCodeRequest;
+import ar.edu.uade.desa1.domain.request.ValidateResetTokenRequest;
 import ar.edu.uade.desa1.domain.request.VerifyCodeRequest;
 import ar.edu.uade.desa1.domain.response.AuthLoginResponse;
 import ar.edu.uade.desa1.domain.response.AuthRegisterResponse;
 import ar.edu.uade.desa1.domain.response.SendVerificationCodeResponse;
+import ar.edu.uade.desa1.domain.response.ValidateResetTokenResponse;
 import ar.edu.uade.desa1.domain.response.VerifyCodeResponse;
 import ar.edu.uade.desa1.exception.NotFoundException;
 import ar.edu.uade.desa1.exception.UserAlreadyExistsException;
@@ -24,6 +27,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
@@ -36,21 +40,23 @@ public class AuthServiceImpl implements AuthService {
     public static final String OTP_VERIFIED_SUCCESSFULLY = "El OTP se ha verificado correctamente.";
     public static final String INVALID_VERIFICATION_CODE = "Código de verificación inválido o expirado.";
     public static final String EMAIL_ALREADY_VERIFIED = "Email ya verificado.";
-    
+
+    private static final int RESET_TOKEN_EXPIRATION_MINUTES = 15;
+
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
     private final EmailService emailService;
-    
+
     @Value("${email.verification.expiration-minutes:15}")
     private int expirationMinutes;
 
     @Transactional
     public AuthRegisterResponse register(AuthRegisterRequest request) {
 
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+        if (userRepository.findByEmail(request.getEmail().toLowerCase()).isPresent()) {
             throw new UserAlreadyExistsException(request.getEmail());
         }
 
@@ -79,42 +85,42 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthLoginResponse login(AuthLoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-            .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+        User user = userRepository.findByEmail(request.getEmail().toLowerCase())
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
         if (!user.getEmailVerified()) {
             return new AuthLoginResponse(false, null, false, "NEEDS_VERIFICATION");
         }
 
-
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new BadCredentialsException("Contraseña incorrecta");
         }
-    
+
         String token = jwtUtil.generateToken(user);
         return new AuthLoginResponse(true, token, true, null);
     }
 
-    public void resetPassword(String email, String newPassword) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+    public void resetPassword(PasswordResetRequest request) {
+        User user = userRepository.findByEmail(request.getEmail().toLowerCase())
+            .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
 
-        user.setPassword(passwordEncoder.encode(newPassword));
+        // Validar token
+        if (!validateResetToken(request.getEmail(), request.getResetToken())) {
+            throw new BadCredentialsException("Token inválido o expirado");
+        }
+
+        // Actualizar contraseña y limpiar token
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setResetToken(null);
+        user.setResetTokenExpiry(null);
+        
         userRepository.save(user);
     }
 
-
     @Override
     public VerifyCodeResponse verifyCode(VerifyCodeRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new NotFoundException("Usuario con email " + request.getEmail() + " no encontrado"));
-        
-        if (!request.getRecoverPassword() && user.getEmailVerified() != null && user.getEmailVerified()) {
-            return VerifyCodeResponse.builder()
-                    .success(true)
-                    .message(EMAIL_ALREADY_VERIFIED)
-                    .build();
-        }
+        User user = userRepository.findByEmail(request.getEmail().toLowerCase())
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
         
         LocalDateTime now = LocalDateTime.now();
         
@@ -126,10 +132,24 @@ public class AuthServiceImpl implements AuthService {
             if (!request.getRecoverPassword()) {
                 user.setEmailVerified(true);
                 user.setActive(true);
+            } else {
+                // Generar reset token
+                String resetToken = UUID.randomUUID().toString();
+                user.setResetToken(resetToken);
+                user.setResetTokenExpiry(now.plusMinutes(RESET_TOKEN_EXPIRATION_MINUTES));
+                user.setVerificationCode(null);
+                user.setVerificationCodeExpiry(null);
+                userRepository.save(user);
+                
+                return VerifyCodeResponse.builder()
+                        .success(true)
+                        .message(OTP_VERIFIED_SUCCESSFULLY)
+                        .resetToken(resetToken)
+                        .build();
             }
+            
             user.setVerificationCode(null);
             user.setVerificationCodeExpiry(null);
-            
             userRepository.save(user);
             
             return VerifyCodeResponse.builder()
@@ -146,9 +166,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public SendVerificationCodeResponse sendVerificationCode(SendVerificationCodeRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
+        User user = userRepository.findByEmail(request.getEmail().toLowerCase())
                 .orElseThrow(() -> new NotFoundException("Usuario con email " + request.getEmail() + " no encontrado"));
-
 
         if (user.getEmailVerified() != null && user.getEmailVerified() && !request.getRecoverPassword()) {
             return SendVerificationCodeResponse.builder()
@@ -172,9 +191,31 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
+    // Nuevo endpoint para validar token
+    public ValidateResetTokenResponse validateResetToken(ValidateResetTokenRequest request) {
+        boolean isValid = validateResetToken(request.getEmail(), request.getReset_token());
+        return ValidateResetTokenResponse.builder()
+            .valid(isValid)
+            .build();
+    }
+
     private String generateVerificationCode() {
         Random random = new Random();
         int code = 100000 + random.nextInt(900000);
         return String.valueOf(code);
     }
+
+
+    public boolean validateResetToken(String email, String resetToken) {
+        User user = userRepository.findByEmail(email.toLowerCase())
+            .orElseThrow(() -> new NotFoundException("Usuario con email " + email + " no encontrado"));
+
+        LocalDateTime now = LocalDateTime.now();
+        return user.getResetToken() != null &&
+                       user.getResetToken().equals(resetToken) &&
+                       user.getResetTokenExpiry() != null &&
+                       now.isBefore(user.getResetTokenExpiry());
+    }
 }
+
+

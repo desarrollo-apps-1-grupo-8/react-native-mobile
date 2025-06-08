@@ -11,6 +11,7 @@ import ar.edu.uade.desa1.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.Authentication;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -184,5 +185,6 @@ public class DeliveryRouteServiceImpl implements DeliveryRouteService {
                     .build()).toList();
         } catch (Exception e) {
             throw new RuntimeException("Error getting all routes for delivery user: " + e.getMessage());
-        }    }
+        }    
+  }
 }
