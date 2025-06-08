@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, Pressable, TextStyle } from 'react-native';
+/*
+import { useSession } from '@/context/SessionContext';
 import api from '@/services/api';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextStyle, View } from 'react-native';
 
 type Route = {
   id: number;
@@ -16,11 +18,13 @@ type Route = {
 export default function ShipmentsScreen() {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [loading, setLoading] = useState(true);
+  const { getUserId } = useSession();
 
   useEffect(() => {
     const fetchRoutes = async () => {
       try {
-        const response = await api.get('/routes/visible');
+        const userId = await getUserId();
+        const response = await api.get(`/routes/user/${userId}`);
         setRoutes(response.data);
       } catch (error) {
         console.error('Error cargando rutas:', error);
@@ -148,3 +152,5 @@ const styles = StyleSheet.create({
 });
 
 
+
+*/

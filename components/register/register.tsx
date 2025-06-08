@@ -3,7 +3,6 @@ import { useSession } from "@/context/SessionContext";
 import api from "@/services/api";
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState } from "react";
 import {
   Alert,
@@ -17,7 +16,7 @@ import {
 import OTPVerification from "../otp/OTPVerification";
 
 export default function RegisterScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<any>>();
+  const navigation = useNavigation<any>();
   const { signIn } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

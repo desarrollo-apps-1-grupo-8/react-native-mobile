@@ -1,17 +1,16 @@
 
 import HistoryScreen from '@/components/history/history';
 import ProfileScreen from '@/components/profile/profile';
-import MyRoutesScreen from '@/components/routes/myRoutes';
-import ShipmentsScreen from '@/components/shipments/shipments';
 import { useSession } from '@/context/SessionContext';
+import { RoutesScreen } from '@/screens/RoutesScreen';
+import { RoleEnum } from '@/utils/roleEnum';
 import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 const Tab = createBottomTabNavigator();
 
 export default function AppStack() {
-  const { session } = useSession();
-  const isDeliveryRole = getUserRoleFromToken;   /// Verifica si el rol es repartidor ACOMODAR
+  const { role } = useSession();
 
   return (
     <Tab.Navigator
@@ -45,14 +44,10 @@ export default function AppStack() {
         },
       })}
     >
-      <Tab.Screen name="Shipments" component={ShipmentsScreen} />
-      {isDeliveryRole && <Tab.Screen name="MyRoutes" component={MyRoutesScreen} />}
+      <Tab.Screen name="Shipments" component={RoutesScreen} />
+      {role === RoleEnum.REPARTIDOR && <Tab.Screen name="MyRoutes" component={RoutesScreen} />}
       <Tab.Screen name="History" component={HistoryScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
-}
-
-function getUserRoleFromToken() {
-  throw new Error('Function not implemented.');
 }
