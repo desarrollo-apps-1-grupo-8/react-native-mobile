@@ -16,7 +16,7 @@ import { useSession } from "../context/SessionContext";
 import { DeliveryRouteResponseWithUserInfo } from "../types/route";
 
 export const HistoryScreen: React.FC = () => {
-  const { session, userId } = useSession();
+  const { session, user } = useSession();
   const [routes, setRoutes] = useState<DeliveryRouteResponseWithUserInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const insets = useSafeAreaInsets();
@@ -26,7 +26,7 @@ export const HistoryScreen: React.FC = () => {
     setLoading(true);
     try {
       let response;
-      response = await api.get(`/routes/history/${userId}`);
+      response = await api.get(`/routes/history/${user?.id}`);
       setRoutes(response.data);
     } catch (error: any) {
       console.error("Error al obtener las rutas:", error);
@@ -34,7 +34,7 @@ export const HistoryScreen: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [session, userId]);
+  }, [session, user]);
 
   useFocusEffect(
     useCallback(() => {

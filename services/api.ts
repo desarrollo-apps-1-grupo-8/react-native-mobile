@@ -22,7 +22,6 @@ api.interceptors.request.use(
 
         try {
             const token = await SecureStore.getItemAsync('session');
-            console.log(token)   
             if (!token) {
                 return config;
             }

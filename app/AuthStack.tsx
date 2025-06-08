@@ -4,8 +4,14 @@ import ForgotPasswordScreen from '@/components/resetPassword/forgot-password';
 import ResetPasswordScreen from '@/components/resetPassword/reset-password';
 import { createStackNavigator } from '@react-navigation/stack';
 
+type AuthStackParamList = {
+  Login: undefined;
+  Register: undefined;
+  ForgotPassword: undefined;
+  ResetPassword: { email: string; resetToken: string };
+};
 
-const Stack = createStackNavigator();
+const Stack = createStackNavigator<AuthStackParamList>();
 
 export default function AuthStack() {
   return (
