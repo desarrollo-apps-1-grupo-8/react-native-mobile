@@ -1,11 +1,14 @@
-import ProfileScreen from "@/components/profile/profile";
-import { useSession } from "@/context/SessionContext";
-import { HistoryScreen } from "@/screens/HistoryScreen";
-import { MyRoutesScreen } from "@/screens/MyRoutesScreen";
-import { RoutesScreen } from "@/screens/RoutesScreen";
-import { RoleEnum } from "@/utils/roleEnum";
-import { Ionicons } from "@expo/vector-icons";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+
+
+import HistoryScreen from '@/components/history/history';
+import ProfileScreen from '@/components/profile/profile';
+import MyRoutesScreen from '@/components/routes/myRoutes';
+import ShipmentsScreen from '@/components/shipments/shipments';
+import { useSession } from '@/context/SessionContext';
+import { Ionicons } from '@expo/vector-icons';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import Toast from 'react-native-toast-message';
+
 
 const Tab = createBottomTabNavigator();
 

@@ -3,9 +3,13 @@ import { useSession } from '@/context/SessionContext';
 import api from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import OTPVerification from '../otp/OTPVerification';
+import Toast from 'react-native-toast-message';
+import LottieView from 'lottie-react-native';
+import * as Haptics from 'expo-haptics';
+import * as Animatable from 'react-native-animatable';
 
 export default function LoginScreen() {
   const navigation = useNavigation<any>()
@@ -15,6 +19,10 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [showOTP, setShowOTP] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const successAnim = useRef<LottieView>(null);
+  const formRef = useRef(null);
+
+
 
   // Función de login con control de errores
   const handleLogin = async () => {
@@ -39,16 +47,32 @@ export default function LoginScreen() {
             }
           ]);
         } else {
+          await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
           Alert.alert('Error', 'Credenciales incorrectas.');
         }
         return;
       }
 
       const token = data.token;
-      signIn(token);
+
+            await AsyncStorage.setItem('token', token);
+            await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            Toast.show({
+              type: 'success',
+              text1: 'Inicio de sesión exitoso',
+              position: 'bottom',
+            });
+            successAnim.current?.play();
+            setTimeout(() => {
+              signIn(token);
+            }, 2000);
+
+
 
     } catch (error: any) {
       console.error(error);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+
       if (error.response?.data?.message) {
         Alert.alert('Error', error.response.data.message);
       } else {
@@ -59,6 +83,7 @@ export default function LoginScreen() {
     }
   };
 
+
   if (showOTP) {
     return (
       <OTPVerification
@@ -68,7 +93,12 @@ export default function LoginScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <Animatable.View
+        ref={formRef}
+        style={styles.container}
+        duration={500}
+        easing="ease-in-out"
+      >
       <View style={styles.formContainer}></View>
       <Text style={styles.title}>Inicio de sesión</Text>
       <Text style={styles.subtitle}>Iniciá sesión para continuar</Text>
@@ -123,7 +153,17 @@ export default function LoginScreen() {
               ¿No tenés una cuenta? <Text style={{ textDecorationLine: 'underline' }}>Registrate</Text>
             </Text>
           </Pressable>
-      </View>
+
+          <LottieView
+            ref={successAnim}
+            source={require('../../assets/animations/success.json')}
+            autoPlay={false}
+            loop={false}
+            style={{ width: 350, height: 350, alignSelf: 'center', position: 'absolute', top: '40%' }}
+          />
+
+          <Toast />
+    </Animatable.View>
   );
 }
 
