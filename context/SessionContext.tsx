@@ -2,67 +2,134 @@ import * as SecureStore from 'expo-secure-store';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 interface SessionContextProps {
-  session: string | null;
+  session: boolean | null;
   isLoading: boolean;
-  signIn: (token: string) => void;
-  signOut: () => void;
+  role: string | null;
+  userId: string | null;
+  signIn: (token: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  getUserId: () => Promise<string | null>;
+  getUserRoleFromToken: () => Promise<string | null>;
 }
 
 const SessionContext = createContext<SessionContextProps | undefined>(undefined);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<string | null>(null);
+  const [session, setSession] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [role, setRole] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
   
-  useEffect(() => {
-    const initializeSession = async () => {
-      try {
-        const token = await SecureStore.getItemAsync('session');
-        setSession(token);
-      } catch (error) {
-        console.error('Error initializing session:', error);
-      } finally {
-        setIsLoading(false);
+  const initializeSession = async () => {
+    if (isInitialized) return;
+    
+    try {
+      const token = await SecureStore.getItemAsync('session');
+      if (token) {
+        setSession(true);
+        const userRole = await getUserRoleFromToken();
+        const id = await getUserId();
+        setRole(userRole);
+        setUserId(id);
+      } else {
+        setSession(false);
+        setRole(null);
+        setUserId(null);
       }
-    };
+    } catch (error) {
+      console.error('Error initializing session:', error);
+      setSession(false);
+      setRole(null);
+      setUserId(null);
+    } finally {
+      setIsLoading(false);
+      setIsInitialized(true);
+    }
+  };
 
+  useEffect(() => {
     initializeSession();
   }, []); 
 
-  const signIn = (token: string) => {
-    setSession(token);
-    SecureStore.setItemAsync('session', token);
+  const getUserId = async () => {
+    try {
+      const token = await SecureStore.getItemAsync('session');
+      if (!token) return null;
+
+      let tokenValue = token;
+      if (tokenValue.startsWith('Bearer ')) {
+        tokenValue = tokenValue.substring(7);
+      }
+
+      const parts = tokenValue.split('.');
+      if (parts.length !== 3) {
+        console.log('Token no tiene formato JWT válido');
+        return null;
+      }
+
+      const payload = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
+      const json = JSON.parse(payload);
+
+      return json.id;
+    } catch (error) {
+      console.error('Error al obtener ID del token:', error);
+      return null;
+    }
+  };
+
+  const signIn = async (token: string) => {
+    try {
+      const formattedToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+      await SecureStore.setItemAsync('session', formattedToken);
+      setSession(true);
+      const userRole = await getUserRoleFromToken();
+      const id = await getUserId();
+      setRole(userRole);
+      setUserId(id);
+    } catch (error) {
+      console.error('Error al guardar token:', error);
+      throw error;
+    }
   };
 
   const signOut = async () => {
-    setSession(null);
-    await SecureStore.deleteItemAsync('session');
+    try {
+      await SecureStore.deleteItemAsync('session');
+      setSession(false);
+      setRole(null);
+      setUserId(null);
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+      throw error;
+    }
   };
 
-  const getUserRoleFromToken = (): string | null => {    /////////////############ ????
+  const getUserRoleFromToken = async (): Promise<string | null> => {
     try {
-      let token = getAccessToken();
+      const token = await SecureStore.getItemAsync('session');
       if (!token) return null;
 
-      if (token.startsWith("Bearer ")) {
-        token = token.substring(7);
+      let tokenValue = token;
+      if (tokenValue.startsWith('Bearer ')) {
+        tokenValue = tokenValue.substring(7);
       }
 
-      const parts = token.split(".");
+      const parts = tokenValue.split('.');
       if (parts.length !== 3) return null;
 
-      const payload = JSON.parse(
-        atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"))
-      );
-      return payload.role || null;
+      const payload = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
+      const json = JSON.parse(payload);
+      
+      return json.role || null;
     } catch (e) {
-      console.error("Error getting role from token:", e);
+      console.error('Error getting role from token:', e);
       return null;
     }
   };  
 
   return (
-    <SessionContext.Provider value={{ session, isLoading, signIn, signOut }}>
+    <SessionContext.Provider value={{ session, isLoading, role, userId, signIn, signOut, getUserId, getUserRoleFromToken }}>
       {children}
     </SessionContext.Provider>
   );

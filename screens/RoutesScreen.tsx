@@ -1,52 +1,120 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { Alert, FlatList, RefreshControl, Text, View } from "react-native";
+import api from "@/services/api";
+import { useFocusEffect } from "@react-navigation/native";
+import React, { useCallback, useState } from "react";
+import {
+  FlatList,
+  RefreshControl,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { RouteCard } from "../components/RouteCard";
-import { useAuth } from "../context/AuthContext";
-import { getAllRoutes, getRoutesByUserId, updateRouteStatus } from "../services/routeService";
+import { useSession } from "../context/SessionContext";
 import { DeliveryRouteResponseWithUserInfo } from "../types/route";
 import { RoleEnum } from "../utils/roleEnum";
 
 export const RoutesScreen: React.FC = () => {
-  const { token, userId, role } = useAuth();
+  const { session, userId, role } = useSession();
   const [routes, setRoutes] = useState<DeliveryRouteResponseWithUserInfo[]>([]);
   const [loading, setLoading] = useState(false);
+  const insets = useSafeAreaInsets();
 
-  const fetchRoutes = useCallback(() => {
-    if (!token || !userId || !role) return;
+  const fetchRoutes = useCallback(async () => {
+    if (!session) return;
     setLoading(true);
-    const fetchFn = role === RoleEnum.USUARIO ? getRoutesByUserId(userId, token) : getAllRoutes(token);
-    fetchFn
-      .then(res => setRoutes(res.data))
-      .catch(() => Alert.alert("Error", "No se pudieron cargar las rutas"))
-      .finally(() => setLoading(false));
-  }, [token, userId, role]);
+    try {
+      let response;
+      if (role === RoleEnum.REPARTIDOR) {
+        response = await api.get(`/routes`);
+      } else {
+        response = await api.get(`/routes/user/${userId}`);
+      }
+      setRoutes(response.data);
+    } catch (error: any) {
+      console.error("Error al obtener las rutas:", error);
+      setRoutes([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [session, userId, role]);
 
-  useEffect(() => {
-    fetchRoutes();
-  }, [fetchRoutes]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchRoutes();
+    }, [fetchRoutes])
+  );
 
-  const handleAction = (routeId: number, newStatus: string) => {
-    if (!token || !userId) return;
-    updateRouteStatus({ deliveryRouteId: routeId, status: newStatus, deliveryUserId: userId }, token)
-      .then(() => fetchRoutes())
-      .catch(() => Alert.alert("Error", "No se pudo actualizar el estado de la ruta"));
+  const handleChangeRouteStatus = async (
+    deliveryRouteId: number,
+    status: string
+  ) => {
+    console.log("test!")
+    setLoading(true);
+    try {
+      if (role === RoleEnum.REPARTIDOR) {
+        await api.post(`/routes/update-status`, {
+          deliveryRouteId,
+          status,
+          deliveryUserId: userId,
+        });
+      }
+    } catch (error: any) {
+      console.error("Error al cambiar estado de la ruta:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#fafafa" }}>
-      <FlatList
-        data={routes}
-        keyExtractor={item => item.id.toString()}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchRoutes} />}
-        ListEmptyComponent={<Text style={{ textAlign: "center", marginTop: 20 }}>No hay rutas disponibles</Text>}
-        renderItem={({ item }) => (
-          <RouteCard
-            route={item}
-            role={role || ""}
-            onAction={newStatus => handleAction(item.id, newStatus)}
-          />
-        )}
-      />
-    </View>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={[styles.container, { paddingTop: insets.top + 16 }]}>
+        <FlatList
+          data={routes}
+          keyExtractor={(item) => item.id.toString()}
+          refreshControl={
+            <RefreshControl refreshing={loading} onRefresh={fetchRoutes} />
+          }
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+                marginTop: 20,
+              }}
+            >
+              <Text style={{ textAlign: "center", color: "#fff" }}>
+                No hay rutas disponibles
+              </Text>
+            </View>
+          }
+          renderItem={({ item }) => (
+            <RouteCard
+              route={item}
+              role={role || ""}
+              onPress={(routeId: number, status: string) => handleChangeRouteStatus(routeId, status)}
+            />
+          )}
+        />
+      </View>
+    </SafeAreaView>
   );
-}; 
+};
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#121212",
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "#121212",
+  },
+  listContent: {
+    paddingBottom: 24,
+    paddingHorizontal: 0,
+  },
+});

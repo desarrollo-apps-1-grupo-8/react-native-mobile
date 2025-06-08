@@ -4,7 +4,7 @@ import { DeliveryRouteResponseWithUserInfo } from "../types/route";
 const API_URL = "http://localhost:8080/api/v1/routes";
 
 export const getRoutesByUserId = (userId: number, token: string) =>
-  axios.get<DeliveryRouteResponseWithUserInfo[]>(`${API_URL}/user/${userId}`, {
+  axios.get<DeliveryRouteResponseWithUserInfo[]>(`${API_URL}/routes/user/${userId}`, {
     headers: { Authorization: `Bearer ${token}` }
   });
 

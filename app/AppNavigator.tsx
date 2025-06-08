@@ -6,12 +6,14 @@ import AppStack from './AppStack';
 import AuthStack from './AuthStack';
 import Toast from 'react-native-toast-message';
 
-export default function AppNavigator() {
-    const { session, isLoading } = useSession();
 
-    if (isLoading) {
-        return <Loader />
-    }
+export default function AppNavigator() {
+  const { session, isLoading } = useSession();
+
+  if (isLoading) {
+    return <Loader />;
+  }
+
 
     return (
       <>
@@ -24,3 +26,4 @@ export default function AppNavigator() {
     );
 
 }
+

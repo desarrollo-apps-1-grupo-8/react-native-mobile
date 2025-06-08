@@ -2,7 +2,6 @@
 import { useSession } from '@/context/SessionContext';
 import api from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useState, useRef } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -55,6 +54,7 @@ export default function LoginScreen() {
       }
 
       const token = data.token;
+
             await AsyncStorage.setItem('token', token);
             await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             Toast.show({
@@ -66,6 +66,7 @@ export default function LoginScreen() {
             setTimeout(() => {
               signIn(token);
             }, 2000);
+
 
 
     } catch (error: any) {
