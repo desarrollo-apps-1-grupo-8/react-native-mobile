@@ -1,5 +1,5 @@
 import api from "@/services/api";
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import React, { useCallback, useEffect, useState } from "react";
 import {
   FlatList,
@@ -19,11 +19,18 @@ export const RoutesScreen: React.FC = () => {
   const { session, user } = useSession();
   const [routes, setRoutes] = useState<DeliveryRouteResponseWithUserInfo[]>([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const insets = useSafeAreaInsets();
 
-  const fetchRoutes = useCallback(async () => {
+  const fetchRoutes = useCallback(async (isRefreshing = false) => {
     if (!session) return;
-    setLoading(true);
+    
+    if (isRefreshing) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+    
     try {
       let response;
 
@@ -37,9 +44,17 @@ export const RoutesScreen: React.FC = () => {
       console.error("Error al obtener las rutas:", error);
       setRoutes([]);
     } finally {
-      setLoading(false);
+      if (isRefreshing) {
+        setRefreshing(false);
+      } else {
+        setLoading(false);
+      }
     }
   }, [session, user]);
+
+  const handleRefresh = useCallback(() => {
+    fetchRoutes(true);
+  }, [fetchRoutes]);
 
   useEffect(() => {
     fetchRoutes();
@@ -73,13 +88,18 @@ export const RoutesScreen: React.FC = () => {
           data={routes}
           keyExtractor={(item) => item.id.toString()}
           refreshControl={
-            <RefreshControl refreshing={loading} onRefresh={fetchRoutes} />
+            <RefreshControl 
+              refreshing={refreshing} 
+              onRefresh={handleRefresh}
+              tintColor="#fff"
+              colors={["#fff"]}
+            />
           }
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <MaterialIcons 
-                name="route" 
+              <Ionicons 
+                name="location-outline" 
                 size={64} 
                 color="#666666" 
                 style={styles.emptyIcon}
