@@ -15,7 +15,7 @@ import { RouteCard } from "../components/RouteCard";
 import { useSession } from "../context/SessionContext";
 import { DeliveryRouteResponseWithUserInfo } from "../types/route";
 
-export const HistoryScreen: React.FC = () => {
+export const MyRoutesScreen: React.FC = () => {
   const { session, userId } = useSession();
   const [routes, setRoutes] = useState<DeliveryRouteResponseWithUserInfo[]>([]);
   const [loading, setLoading] = useState(false);
@@ -26,7 +26,7 @@ export const HistoryScreen: React.FC = () => {
     setLoading(true);
     try {
       let response;
-      response = await api.get(`/routes/history/${userId}`);
+      response = await api.get(`/routes/deliveryUser/${userId}`);
       setRoutes(response.data);
     } catch (error: any) {
       console.error("Error al obtener las rutas:", error);
@@ -41,6 +41,25 @@ export const HistoryScreen: React.FC = () => {
       fetchRoutes();
     }, [fetchRoutes])
   );
+
+  const handleChangeRouteStatus = async (
+    deliveryRouteId: number,
+    status: string
+  ) => {
+    console.log("test!")
+    setLoading(true);
+    try {
+      await api.post(`/routes/update-status`, {
+        deliveryRouteId,
+        status,
+        deliveryUserId: userId,
+      });
+    } catch (error: any) {
+      console.error("Error al cambiar estado de la ruta:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -62,7 +81,7 @@ export const HistoryScreen: React.FC = () => {
               }}
             >
               <Text style={{ textAlign: "center", color: "#fff" }}>
-                No hay rutas finalizadas actualmente
+                No hay rutas asignadas a tu usuario actualmente
               </Text>
             </View>
           }
@@ -70,6 +89,7 @@ export const HistoryScreen: React.FC = () => {
             <RouteCard
               route={item}
               role={RoleEnum.REPARTIDOR}
+              onPress={(routeId: number, status: string) => handleChangeRouteStatus(routeId, status)}
             />
           )}
         />
