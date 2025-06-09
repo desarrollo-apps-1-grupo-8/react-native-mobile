@@ -3,17 +3,28 @@ import { useSession } from "@/context/SessionContext";
 import api from "@/services/api";
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from "@react-navigation/native";
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
+    Alert,
+    Animated,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 import OTPVerification from "../otp/OTPVerification";
+
+type ErrorType = {
+  firstName?: string;
+  lastName?: string;
+  dni?: string;
+  phone?: string;
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+}
 
 export default function RegisterScreen() {
   const navigation = useNavigation<any>();
@@ -31,6 +42,55 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [userType, setUserType] = useState<1 | 2>(1);
+  const [errors, setErrors] = useState<ErrorType>({});
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+
+  // Animation references for focus
+  const firstNameBorderAnim = useRef(new Animated.Value(0)).current;
+  const lastNameBorderAnim = useRef(new Animated.Value(0)).current;
+  const dniBorderAnim = useRef(new Animated.Value(0)).current;
+  const phoneBorderAnim = useRef(new Animated.Value(0)).current;
+  const emailBorderAnim = useRef(new Animated.Value(0)).current;
+  const passwordBorderAnim = useRef(new Animated.Value(0)).current;
+  const confirmPasswordBorderAnim = useRef(new Animated.Value(0)).current;
+
+  const isValidEmail = useCallback((email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }, []);
+
+  const animateBorder = useCallback((animValue: Animated.Value, toValue: number) => {
+    Animated.timing(animValue, {
+      toValue,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  }, []);
+
+  const handleFocus = useCallback((field: string, animValue: Animated.Value) => {
+    setFocusedField(field);
+    animateBorder(animValue, 1);
+    // Clear error for this field when focused
+    setErrors(prev => ({ ...prev, [field]: undefined }));
+  }, [animateBorder]);
+
+  const handleBlur = useCallback((field: string, animValue: Animated.Value) => {
+    setFocusedField(null);
+    animateBorder(animValue, 0);
+  }, [animateBorder]);
+
+  const getBorderColor = useCallback((field: string, animValue: Animated.Value) => {
+    const hasError = errors[field as keyof ErrorType];
+    
+    if (hasError) {
+      return '#ff4444';
+    }
+    
+    return animValue.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['#333', '#FFFFFF']
+    });
+  }, [errors]);
 
   const formatDNI = (value: string) => {
     const numbers = value.replace(/\D/g, '');
@@ -60,9 +120,60 @@ export default function RegisterScreen() {
     setPhone(numbers);
   };
 
+  const validateStep1 = useCallback(() => {
+    const newErrors: ErrorType = {};
+    
+    if (!firstName.trim()) {
+      newErrors.firstName = 'El nombre es requerido';
+    }
+    
+    if (!lastName.trim()) {
+      newErrors.lastName = 'El apellido es requerido';
+    }
+    
+    if (!dni.trim()) {
+      newErrors.dni = 'El DNI es requerido';
+    } else if (dni.replace(/\./g, '').length < 7) {
+      newErrors.dni = 'El DNI debe tener al menos 7 dígitos';
+    }
+    
+    if (!phone.trim()) {
+      newErrors.phone = 'El teléfono es requerido';
+    } else if (phone.length < 10) {
+      newErrors.phone = 'El teléfono debe tener 10 dígitos';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [firstName, lastName, dni, phone]);
+
+  const validateStep2 = useCallback(() => {
+    const newErrors: ErrorType = {};
+    
+    if (!email.trim()) {
+      newErrors.email = 'El email es requerido';
+    } else if (!isValidEmail(email)) {
+      newErrors.email = 'Por favor ingresá un email válido';
+    }
+    
+    if (!password.trim()) {
+      newErrors.password = 'La contraseña es requerida';
+    } else if (password.length < 6) {
+      newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
+    }
+    
+    if (!confirmPassword.trim()) {
+      newErrors.confirmPassword = 'Confirmá tu contraseña';
+    } else if (password !== confirmPassword) {
+      newErrors.confirmPassword = 'Las contraseñas no coinciden';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [email, password, confirmPassword, isValidEmail]);
+
   const handleRegister = async () => {
-    if (!email || !password) {
-      Alert.alert("Error", "Por favor completá todos los campos");
+    if (!validateStep2()) {
       return;
     }
 
@@ -80,10 +191,11 @@ export default function RegisterScreen() {
       });
       setShowOTP(true);
     } catch (error: any) {
-      console.error(error);
-      if (error.response?.data?.message) {
-        Alert.alert("Error", error.response.data.message);
+      if (error.response) {
+        console.log('Register error:', error.response.data);
+        Alert.alert("Error", error.response.data.message || "Ocurrió un error");
       } else {
+        console.log('Register error:', error.message);
         Alert.alert("Error", "No se pudo conectar al servidor.");
       }
     } finally {
@@ -100,8 +212,7 @@ export default function RegisterScreen() {
   }
 
   const handleNextStep = () => {
-    if (!firstName || !lastName || !dni || !phone) {
-      Alert.alert("Error", "Por favor completá todos los campos");
+    if (!validateStep1()) {
       return;
     }
     setCurrentStep(2);
@@ -109,6 +220,7 @@ export default function RegisterScreen() {
 
   const handlePrevStep = () => {
     setCurrentStep(1);
+    setErrors({});
   };
 
   if (showOTP) {
@@ -131,52 +243,70 @@ export default function RegisterScreen() {
             <View style={styles.nameContainer}>
               <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
                 <Text style={styles.label}>Nombre</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="John"
-                  placeholderTextColor="#666"
-                  autoCapitalize="none"
-                  value={firstName}
-                  onChangeText={setFirstname}
-                />
+                <Animated.View style={[styles.inputContainer, { borderColor: getBorderColor('firstName', firstNameBorderAnim) }]}>
+                  <TextInput
+                    style={[styles.input, styles.inputNoBorder]}
+                    placeholder="John"
+                    placeholderTextColor="#666"
+                    autoCapitalize="words"
+                    value={firstName}
+                    onChangeText={setFirstname}
+                    onFocus={() => handleFocus('firstName', firstNameBorderAnim)}
+                    onBlur={() => handleBlur('firstName', firstNameBorderAnim)}
+                  />
+                </Animated.View>
+                {errors.firstName && <Text style={styles.errorText}>{errors.firstName}</Text>}
               </View>
               <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
                 <Text style={styles.label}>Apellido</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Doe"
-                  placeholderTextColor="#666"
-                  autoCapitalize="none"
-                  value={lastName}
-                  onChangeText={setLastname}
-                />
+                <Animated.View style={[styles.inputContainer, { borderColor: getBorderColor('lastName', lastNameBorderAnim) }]}>
+                  <TextInput
+                    style={[styles.input, styles.inputNoBorder]}
+                    placeholder="Doe"
+                    placeholderTextColor="#666"
+                    autoCapitalize="words"
+                    value={lastName}
+                    onChangeText={setLastname}
+                    onFocus={() => handleFocus('lastName', lastNameBorderAnim)}
+                    onBlur={() => handleBlur('lastName', lastNameBorderAnim)}
+                  />
+                </Animated.View>
+                {errors.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
               </View>
             </View>
             <View style={styles.inputGroup}>
               <Text style={styles.label}>DNI</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="42.996.646"
-                placeholderTextColor="#666"
-                autoCapitalize="none"
-                value={dni}
-                onChangeText={handleDNIChange}
-                keyboardType="numeric"
-                maxLength={10}
-              />
+              <Animated.View style={[styles.inputContainer, { borderColor: getBorderColor('dni', dniBorderAnim) }]}>
+                <TextInput
+                  style={[styles.input, styles.inputNoBorder]}
+                  placeholder="42.996.646"
+                  placeholderTextColor="#666"
+                  value={dni}
+                  onChangeText={handleDNIChange}
+                  keyboardType="numeric"
+                  maxLength={10}
+                  onFocus={() => handleFocus('dni', dniBorderAnim)}
+                  onBlur={() => handleBlur('dni', dniBorderAnim)}
+                />
+              </Animated.View>
+              {errors.dni && <Text style={styles.errorText}>{errors.dni}</Text>}
             </View>
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Celular</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="1160335900"
-                placeholderTextColor="#666"
-                autoCapitalize="none"
-                value={phone}
-                onChangeText={handlePhoneChange}
-                keyboardType="numeric"
-                maxLength={10}
-              />
+              <Animated.View style={[styles.inputContainer, { borderColor: getBorderColor('phone', phoneBorderAnim) }]}>
+                <TextInput
+                  style={[styles.input, styles.inputNoBorder]}
+                  placeholder="1160335900"
+                  placeholderTextColor="#666"
+                  value={phone}
+                  onChangeText={handlePhoneChange}
+                  keyboardType="numeric"
+                  maxLength={10}
+                  onFocus={() => handleFocus('phone', phoneBorderAnim)}
+                  onBlur={() => handleBlur('phone', phoneBorderAnim)}
+                />
+              </Animated.View>
+              {errors.phone && <Text style={styles.errorText}>{errors.phone}</Text>}
             </View>
             <View style={styles.userTypeContainer}>
               <Text style={styles.label}>Tipo de cuenta</Text>
@@ -218,21 +348,26 @@ export default function RegisterScreen() {
           <>
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Email</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="correo@mail.com"
-                placeholderTextColor="#666"
-                autoCapitalize="none"
-                keyboardType="email-address"
-                value={email}
-                onChangeText={setEmail}
-              />
+              <Animated.View style={[styles.inputContainer, { borderColor: getBorderColor('email', emailBorderAnim) }]}>
+                <TextInput
+                  style={[styles.input, styles.inputNoBorder]}
+                  placeholder="correo@mail.com"
+                  placeholderTextColor="#666"
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  value={email}
+                  onChangeText={setEmail}
+                  onFocus={() => handleFocus('email', emailBorderAnim)}
+                  onBlur={() => handleBlur('email', emailBorderAnim)}
+                />
+              </Animated.View>
+              {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
             </View>
             <View style={styles.inputGroup}>
               <View style={styles.passwordHeader}>
                 <Text style={styles.label}>Contraseña</Text>
               </View>
-              <View style={styles.passwordContainer}>
+              <Animated.View style={[styles.passwordContainer, { borderColor: getBorderColor('password', passwordBorderAnim) }]}>
                 <TextInput
                   style={[styles.input, styles.passwordInput]}
                   placeholder="••••••••"
@@ -240,6 +375,8 @@ export default function RegisterScreen() {
                   secureTextEntry={!showPassword}
                   value={password}
                   onChangeText={setPassword}
+                  onFocus={() => handleFocus('password', passwordBorderAnim)}
+                  onBlur={() => handleBlur('password', passwordBorderAnim)}
                 />
                 <Pressable
                   style={styles.eyeButton}
@@ -251,13 +388,14 @@ export default function RegisterScreen() {
                     color="#666"
                   />
                 </Pressable>
-              </View>
+              </Animated.View>
+              {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
             </View>
             <View style={styles.inputGroup}>
               <View style={styles.passwordHeader}>
                 <Text style={styles.label}>Confirmar Contraseña</Text>
               </View>
-              <View style={styles.passwordContainer}>
+              <Animated.View style={[styles.passwordContainer, { borderColor: getBorderColor('confirmPassword', confirmPasswordBorderAnim) }]}>
                 <TextInput
                   style={[styles.input, styles.passwordInput]}
                   placeholder="••••••••"
@@ -265,6 +403,8 @@ export default function RegisterScreen() {
                   secureTextEntry={!showConfirmPassword}
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
+                  onFocus={() => handleFocus('confirmPassword', confirmPasswordBorderAnim)}
+                  onBlur={() => handleBlur('confirmPassword', confirmPasswordBorderAnim)}
                 />
                 <Pressable
                   style={styles.eyeButton}
@@ -276,7 +416,8 @@ export default function RegisterScreen() {
                     color="#666"
                   />
                 </Pressable>
-              </View>
+              </Animated.View>
+              {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
             </View>
             <View style={styles.buttonContainer}>
               <Pressable
@@ -349,9 +490,16 @@ const styles = StyleSheet.create({
     color: "white",
     padding: 16,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#333",
     fontSize: 16,
+  },
+  inputNoBorder: {
+    borderWidth: 0,
+  },
+  inputContainer: {
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#333',
+    backgroundColor: 'transparent',
   },
   passwordHeader: {
     flexDirection: "row",
@@ -417,9 +565,14 @@ const styles = StyleSheet.create({
   },
   passwordContainer: {
     position: 'relative',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#333',
+    backgroundColor: 'transparent',
   },
   passwordInput: {
     paddingRight: 48,
+    borderWidth: 0,
   },
   eyeButton: {
     position: 'absolute',
@@ -455,5 +608,11 @@ const styles = StyleSheet.create({
   },
   userTypeButtonTextActive: {
     color: 'black',
+  },
+  errorText: {
+    color: '#ff4444',
+    fontSize: 14,
+    marginTop: 4,
+    marginLeft: 4,
   },
 });
