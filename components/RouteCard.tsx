@@ -50,9 +50,9 @@ export const RouteCard: React.FC<any> = ({ route, role, onPress }) => {
         </View>
       </View>
       <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.buttonSecundario}>
+        {/* <TouchableOpacity style={styles.buttonSecundario}>
           <Text style={styles.buttonText}>Ver detalles</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         {isRepartidor && status === "AVAILABLE" && (
           <TouchableOpacity style={styles.buttonPrincipal} onPress={() => onPress(route.id, "IN_PROGRESS")}> 
             <Text style={styles.buttonText}>Asignarme ruta</Text>
