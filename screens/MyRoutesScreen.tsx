@@ -64,7 +64,6 @@ export const MyRoutesScreen: React.FC = () => {
     deliveryRouteId: number,
     status: string
   ) => {
-    console.log("test!")
     setLoading(true);
     try {
       await api.post(`/routes/update-status`, {
@@ -72,6 +71,8 @@ export const MyRoutesScreen: React.FC = () => {
         status,
         deliveryUserId: user?.id,
       });
+      await fetchRoutes();
+
     } catch (error: any) {
       console.error("Error al cambiar estado de la ruta:", error);
     } finally {
