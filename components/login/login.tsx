@@ -6,6 +6,8 @@ import { useNavigation } from '@react-navigation/native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import OTPVerification from '../otp/OTPVerification';
+import LottieView from 'lottie-react-native';
+import { Modal } from 'react-native';
 
 type ErrorType = {
   message: string;
@@ -22,6 +24,7 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<ErrorType | null>(null);
   const [showVerificationPrompt, setShowVerificationPrompt] = useState(false);
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
 
   // Animation references
   const shakeAnimationEmail = useRef(new Animated.Value(0)).current;
@@ -153,7 +156,11 @@ export default function LoginScreen() {
         return;
       }
 
-      await signIn(data.token);
+      setShowSuccessAnimation(true);
+      setTimeout(async () => {
+        setShowSuccessAnimation(false);
+        await signIn(data.token); // navega a la siguiente pantalla desde signIn()
+      }, 2000); // animación por 2 segundos
 
     } catch (error: any) {
       console.error('Login error:', error);
@@ -234,138 +241,155 @@ export default function LoginScreen() {
   });
 
   return (
-    <View style={styles.container}>
-      <Animated.View style={{ transform: [{ translateX: shakeAnimationGeneral }] }}>
-        <Text style={styles.title}>Inicio de sesión</Text>
-        <Text style={styles.subtitle}>Iniciá sesión para continuar</Text>
-      </Animated.View>
-      
-      {/* Error Message */}
-      {error && (
-        <Animated.View style={[styles.errorContainer, { opacity: errorOpacity }]}>
-          <View style={styles.errorContent}>
-            <Ionicons name="alert-circle" size={20} color="#ff4444" />
-            <Text style={styles.errorText}>{error.message}</Text>
-          </View>
+    <>
+      <View style={styles.container}>
+        <Animated.View style={{ transform: [{ translateX: shakeAnimationGeneral }] }}>
+          <Text style={styles.title}>Inicio de sesión</Text>
+          <Text style={styles.subtitle}>Iniciá sesión para continuar</Text>
         </Animated.View>
-      )}
 
-      {/* Verification Prompt */}
-      {showVerificationPrompt && (
-        <Animated.View style={[styles.verificationPrompt, { opacity: errorOpacity }]}>
-          <View style={styles.verificationContent}>
-            <Ionicons name="mail" size={24} color="#4CAF50" />
-            <Text style={styles.verificationTitle}>Verificación requerida</Text>
-            <Text style={styles.verificationText}>
-              Te enviaremos un código para verificar tu cuenta
-            </Text>
-            <View style={styles.verificationButtons}>
-              <Pressable 
-                style={[styles.verificationButton, styles.cancelButton]} 
-                onPress={handleVerificationCancel}
-              >
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
-              </Pressable>
-              <Pressable 
-                style={[styles.verificationButton, styles.acceptButton]} 
-                onPress={handleVerificationAccept}
-              >
-                <Text style={styles.acceptButtonText}>Verificar</Text>
-              </Pressable>
+        {/* Error Message */}
+        {error && (
+          <Animated.View style={[styles.errorContainer, { opacity: errorOpacity }]}>
+            <View style={styles.errorContent}>
+              <Ionicons name="alert-circle" size={20} color="#ff4444" />
+              <Text style={styles.errorText}>{error.message}</Text>
             </View>
-          </View>
-        </Animated.View>
-      )}
-      
-      <Animated.View 
-        style={[
-          styles.inputGroup,
-          { transform: [{ translateX: shakeAnimationEmail }] }
-        ]}
-      >
-        <Text style={styles.label}>Email</Text>
-        <Animated.View style={[styles.inputContainer, { borderColor: emailBorderColor }]}>
-          <TextInput
-            style={[styles.input, styles.inputNoBorder]}
-            placeholder="correo@mail.com"
-            placeholderTextColor="#666"
-            autoCapitalize="none"
-            keyboardType="email-address"
-            autoComplete="email"
-            textContentType="emailAddress"
-            value={email}
-            onChangeText={setEmail}
-            editable={!loading}
-          />
-        </Animated.View>
-      </Animated.View>
-      
-      <Animated.View 
-        style={[
-          styles.inputGroup,
-          { transform: [{ translateX: shakeAnimationPassword }] }
-        ]}
-      >
-        <Text style={styles.label}>Contraseña</Text>
-        <Animated.View style={[styles.passwordContainer, { borderColor: passwordBorderColor }]}>
-          <TextInput
-            style={[styles.input, styles.passwordInput]}
-            placeholder="••••••••"
-            placeholderTextColor="#666"
-            secureTextEntry={!showPassword}
-            autoComplete="password"
-            textContentType="password"
-            value={password}
-            onChangeText={setPassword}
-            editable={!loading}
-          />
-          <Pressable
-            style={styles.eyeButton}
-            onPress={togglePasswordVisibility}
-            disabled={loading}
-          >
-            <Ionicons
-              name={showPassword ? "eye-off" : "eye"}
-              size={24}
-              color="#666"
+          </Animated.View>
+        )}
+
+        {/* Verification Prompt */}
+        {showVerificationPrompt && (
+          <Animated.View style={[styles.verificationPrompt, { opacity: errorOpacity }]}>
+            <View style={styles.verificationContent}>
+              <Ionicons name="mail" size={24} color="#4CAF50" />
+              <Text style={styles.verificationTitle}>Verificación requerida</Text>
+              <Text style={styles.verificationText}>
+                Te enviaremos un código para verificar tu cuenta
+              </Text>
+              <View style={styles.verificationButtons}>
+                <Pressable
+                  style={[styles.verificationButton, styles.cancelButton]}
+                  onPress={handleVerificationCancel}
+                >
+                  <Text style={styles.cancelButtonText}>Cancelar</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.verificationButton, styles.acceptButton]}
+                  onPress={handleVerificationAccept}
+                >
+                  <Text style={styles.acceptButtonText}>Verificar</Text>
+                </Pressable>
+              </View>
+            </View>
+          </Animated.View>
+        )}
+
+        <Animated.View
+          style={[
+            styles.inputGroup,
+            { transform: [{ translateX: shakeAnimationEmail }] }
+          ]}
+        >
+          <Text style={styles.label}>Email</Text>
+          <Animated.View style={[styles.inputContainer, { borderColor: emailBorderColor }]}>
+            <TextInput
+              style={[styles.input, styles.inputNoBorder]}
+              placeholder="correo@mail.com"
+              placeholderTextColor="#666"
+              autoCapitalize="none"
+              keyboardType="email-address"
+              autoComplete="email"
+              textContentType="emailAddress"
+              value={email}
+              onChangeText={setEmail}
+              editable={!loading}
             />
-          </Pressable>
+          </Animated.View>
         </Animated.View>
-      </Animated.View>
-      
-      <Pressable 
-        onPress={navigateToForgotPassword}
-        disabled={loading}
-      >
-        <Text style={styles.forgotPassword}>¿Olvidaste tu contraseña?</Text>
-      </Pressable>
 
-      <Pressable 
-        style={[
-          styles.loginButton, 
-          (!isFormValid || loading) && styles.loginButtonDisabled
-        ]} 
-        onPress={handleLogin} 
-        disabled={!isFormValid || loading}
-      >
-        <Text style={[
-          styles.loginButtonText,
-          (!isFormValid || loading) && styles.loginButtonTextDisabled
-        ]}>
-          {loading ? 'Ingresando...' : 'Ingresar'}
-        </Text>
-      </Pressable>
+        <Animated.View
+          style={[
+            styles.inputGroup,
+            { transform: [{ translateX: shakeAnimationPassword }] }
+          ]}
+        >
+          <Text style={styles.label}>Contraseña</Text>
+          <Animated.View style={[styles.passwordContainer, { borderColor: passwordBorderColor }]}>
+            <TextInput
+              style={[styles.input, styles.passwordInput]}
+              placeholder="••••••••"
+              placeholderTextColor="#666"
+              secureTextEntry={!showPassword}
+              autoComplete="password"
+              textContentType="password"
+              value={password}
+              onChangeText={setPassword}
+              editable={!loading}
+            />
+            <Pressable
+              style={styles.eyeButton}
+              onPress={togglePasswordVisibility}
+              disabled={loading}
+            >
+              <Ionicons
+                name={showPassword ? "eye-off" : "eye"}
+                size={24}
+                color="#666"
+              />
+            </Pressable>
+          </Animated.View>
+        </Animated.View>
 
-      <Pressable 
-        onPress={navigateToRegister}
-        disabled={loading}
-      >
-        <Text style={styles.registerText}>
-          ¿No tenés una cuenta? <Text style={styles.registerLink}>Registrate</Text>
-        </Text>
-      </Pressable>
-    </View>
+        <Pressable
+          onPress={navigateToForgotPassword}
+          disabled={loading}
+        >
+          <Text style={styles.forgotPassword}>¿Olvidaste tu contraseña?</Text>
+        </Pressable>
+
+        <Pressable
+          style={[
+            styles.loginButton,
+            (!isFormValid || loading) && styles.loginButtonDisabled
+          ]}
+          onPress={handleLogin}
+          disabled={!isFormValid || loading}
+        >
+          <Text style={[
+            styles.loginButtonText,
+            (!isFormValid || loading) && styles.loginButtonTextDisabled
+          ]}>
+            {loading ? 'Ingresando...' : 'Ingresar'}
+          </Text>
+        </Pressable>
+
+        <Pressable
+          onPress={navigateToRegister}
+          disabled={loading}
+        >
+          <Text style={styles.registerText}>
+            ¿No tenés una cuenta? <Text style={styles.registerLink}>Registrate</Text>
+          </Text>
+        </Pressable>
+      </View>
+
+      {/* 🚀 Animación de éxito */}
+      {showSuccessAnimation && (
+        <Modal transparent animationType="fade">
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.6)' }}>
+            <LottieView
+              source={require('../../assets/animations/success.json')}
+              autoPlay
+              loop={false}
+              style={{ width: 200, height: 200 }}
+            />
+          </View>
+        </Modal>
+      )}
+    </>
   );
+
 }
 
 // Estilos
