@@ -89,7 +89,7 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
 
         if (!user.getEmailVerified()) {
-            throw new EmailNotVerifiedException("Email not verified");
+            return new AuthLoginResponse(false, null, false, "NEEDS_VERIFICATION");
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
