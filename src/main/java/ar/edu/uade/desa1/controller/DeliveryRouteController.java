@@ -56,10 +56,5 @@ public class DeliveryRouteController {
     public ResponseEntity<List<DeliveryRouteResponse>> getCompletedRoutes(@PathVariable("userId") Long userId) {
         return ResponseEntity.ok(deliveryRouteService.getCompletedRoutesByUser(userId));
     }
-
-    @GetMapping("/visible")
-    public ResponseEntity<List<DeliveryRouteResponse>> getVisibleRoutes(Authentication authentication) {
-        return ResponseEntity.ok(deliveryRouteService.getRoutesForAuthenticatedUser(authentication));
-    }
 }
 
