@@ -32,12 +32,14 @@ export default function LoginScreen() {
   const [error, setError] = useState<ErrorType | null>(null);
   const [showVerificationPrompt, setShowVerificationPrompt] = useState(false);
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   // Animation references
   const shakeAnimationEmail = useRef(new Animated.Value(0)).current;
   const shakeAnimationPassword = useRef(new Animated.Value(0)).current;
   const shakeAnimationGeneral = useRef(new Animated.Value(0)).current;
   const errorOpacity = useRef(new Animated.Value(0)).current;
+  const verificationOpacity = useRef(new Animated.Value(0)).current;
   const borderAnimationEmail = useRef(new Animated.Value(0)).current;
   const borderAnimationPassword = useRef(new Animated.Value(0)).current;
 
@@ -191,7 +193,22 @@ export default function LoginScreen() {
 
       const data = response.data;
 
-      // Validate token exists
+      console.log('Login response:', data); // Debug log
+      
+      // Check if login was not successful
+      if (!data.success) {
+        if (data.status === 'NEEDS_VERIFICATION' || data.message === 'NEEDS_VERIFICATION') {
+          setShowOTP(true);
+          return;
+        } else if (data.message) {
+          showError(data.message, 'general');
+        } else {
+          showError('Credenciales incorrectas', 'general');
+        }
+        return;
+      }
+      
+      // Validate token exists for successful login
       if (!data.token) {
         showError("No se recibió un token válido del servidor", "general");
         return;
@@ -207,6 +224,11 @@ export default function LoginScreen() {
         console.log("Login error:", error.response.data);
       } else {
         console.log("Login error:", error.message);
+      }
+
+      if (error.response?.data?.message === "NEEDS_VERIFICATION") {
+        setShowOTP(true);
+        return;
       }
 
       if (error.response?.status === 401) {
@@ -257,13 +279,66 @@ export default function LoginScreen() {
 
   // Handle verification prompt
   const handleVerificationAccept = useCallback(() => {
-    setShowVerificationPrompt(false);
-    setShowOTP(true);
-  }, []);
+    Animated.timing(verificationOpacity, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowVerificationPrompt(false);
+      setShowOTP(true);
+    });
+  }, [verificationOpacity]);
 
   const handleVerificationCancel = useCallback(() => {
-    setShowVerificationPrompt(false);
+    Animated.timing(verificationOpacity, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowVerificationPrompt(false);
+    });
+  }, [verificationOpacity]);
+
+  // Show verification prompt with animation
+  useEffect(() => {
+    if (showVerificationPrompt) {
+      verificationOpacity.setValue(0);
+      Animated.timing(verificationOpacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [showVerificationPrompt, verificationOpacity]);
+
+  // Focus animation handlers
+  const animateBorder = useCallback((animValue: Animated.Value, toValue: number) => {
+    Animated.timing(animValue, {
+      toValue,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
   }, []);
+
+  const handleFocus = useCallback((field: string, animValue: Animated.Value) => {
+    setFocusedField(field);
+    animateBorder(animValue, 1);
+  }, [animateBorder]);
+
+  const handleBlur = useCallback((field: string, animValue: Animated.Value) => {
+    setFocusedField(null);
+    animateBorder(animValue, 0);
+  }, [animateBorder]);
+
+  const getBorderColor = useCallback((field: string, animValue: Animated.Value, errorField?: string) => {
+    if (error && error.field === errorField) {
+      return '#ff4444';
+    }
+    return animValue.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['#333', '#FFFFFF']
+    });
+  }, [error]);
 
   if (showOTP) {
     return <OTPVerification email={email.trim().toLowerCase()} />;
@@ -301,103 +376,103 @@ export default function LoginScreen() {
           </Animated.View>
         )}
 
-        {/* Verification Prompt */}
-        {showVerificationPrompt && (
-          <Animated.View
-            style={[styles.verificationPrompt, { opacity: errorOpacity }]}
-          >
-            <View style={styles.verificationContent}>
-              <Ionicons name="mail" size={24} color="#4CAF50" />
-              <Text style={styles.verificationTitle}>
-                Verificación requerida
-              </Text>
-              <Text style={styles.verificationText}>
-                Te enviaremos un código para verificar tu cuenta
-              </Text>
-              <View style={styles.verificationButtons}>
-                <Pressable
-                  style={[styles.verificationButton, styles.cancelButton]}
-                  onPress={handleVerificationCancel}
-                >
-                  <Text style={styles.cancelButtonText}>Cancelar</Text>
-                </Pressable>
-                <Pressable
-                  style={[styles.verificationButton, styles.acceptButton]}
-                  onPress={handleVerificationAccept}
-                >
-                  <Text style={styles.acceptButtonText}>Verificar</Text>
-                </Pressable>
-              </View>
+      {/* Verification Prompt */}
+      {showVerificationPrompt && (
+        <Animated.View style={[styles.verificationPrompt, { opacity: verificationOpacity }]}>
+          <Pressable 
+            style={styles.verificationOverlay}
+            onPress={handleVerificationCancel}
+          />
+          <View style={styles.verificationContent}>
+            <Ionicons name="shield-checkmark" size={32} color="white" />
+            <Text style={styles.verificationTitle}>Verificación requerida</Text>
+            <Text style={styles.verificationText}>
+              Te enviaremos un código para verificar tu cuenta
+            </Text>
+            <View style={styles.verificationButtons}>
+              <Pressable 
+                style={[styles.verificationButton, styles.cancelButton]} 
+                onPress={handleVerificationCancel}
+              >
+                <Text style={styles.cancelButtonText}>Cancelar</Text>
+              </Pressable>
+              <Pressable 
+                style={[styles.verificationButton, styles.acceptButton]} 
+                onPress={handleVerificationAccept}
+              >
+                <Text style={styles.acceptButtonText}>Verificar</Text>
+              </Pressable>
             </View>
-          </Animated.View>
-        )}
-
-        <Animated.View
-          style={[
-            styles.inputGroup,
-            { transform: [{ translateX: shakeAnimationEmail }] },
-          ]}
-        >
-          <Text style={styles.label}>Email</Text>
-          <Animated.View
-            style={[styles.inputContainer, { borderColor: emailBorderColor }]}
-          >
-            <TextInput
-              style={[styles.input, styles.inputNoBorder]}
-              placeholder="correo@mail.com"
-              placeholderTextColor="#666"
-              autoCapitalize="none"
-              keyboardType="email-address"
-              autoComplete="email"
-              textContentType="emailAddress"
-              value={email}
-              onChangeText={setEmail}
-              editable={!loading}
-            />
-          </Animated.View>
+          </View>
         </Animated.View>
-
-        <Animated.View
-          style={[
-            styles.inputGroup,
-            { transform: [{ translateX: shakeAnimationPassword }] },
-          ]}
-        >
-          <Text style={styles.label}>Contraseña</Text>
-          <Animated.View
-            style={[
-              styles.passwordContainer,
-              { borderColor: passwordBorderColor },
-            ]}
-          >
-            <TextInput
-              style={[styles.input, styles.passwordInput]}
-              placeholder="••••••••"
-              placeholderTextColor="#666"
-              secureTextEntry={!showPassword}
-              autoComplete="password"
-              textContentType="password"
-              value={password}
-              onChangeText={setPassword}
-              editable={!loading}
-            />
-            <Pressable
-              style={styles.eyeButton}
-              onPress={togglePasswordVisibility}
-              disabled={loading}
-            >
-              <Ionicons
-                name={showPassword ? "eye-off" : "eye"}
-                size={24}
-                color="#666"
-              />
-            </Pressable>
-          </Animated.View>
+      )}
+      
+      <Animated.View 
+        style={[
+          styles.inputGroup,
+          { transform: [{ translateX: shakeAnimationEmail }] }
+        ]}
+      >
+        <Text style={styles.label}>Email</Text>
+        <Animated.View style={[styles.inputContainer, { borderColor: getBorderColor('email', borderAnimationEmail, 'email') }]}>
+          <TextInput
+            style={[styles.input, styles.inputNoBorder]}
+            placeholder="correo@mail.com"
+            placeholderTextColor="#666"
+            autoCapitalize="none"
+            keyboardType="email-address"
+            autoComplete="email"
+            textContentType="emailAddress"
+            value={email}
+            onChangeText={setEmail}
+            editable={!loading}
+            onFocus={() => handleFocus('email', borderAnimationEmail)}
+            onBlur={() => handleBlur('email', borderAnimationEmail)}
+          />
         </Animated.View>
-
-        <Pressable onPress={navigateToForgotPassword} disabled={loading}>
-          <Text style={styles.forgotPassword}>¿Olvidaste tu contraseña?</Text>
-        </Pressable>
+      </Animated.View>
+      
+      <Animated.View 
+        style={[
+          styles.inputGroup,
+          { transform: [{ translateX: shakeAnimationPassword }] }
+        ]}
+      >
+        <Text style={styles.label}>Contraseña</Text>
+        <Animated.View style={[styles.passwordContainer, { borderColor: getBorderColor('password', borderAnimationPassword, 'password') }]}>
+          <TextInput
+            style={[styles.input, styles.passwordInput]}
+            placeholder="••••••••"
+            placeholderTextColor="#666"
+            secureTextEntry={!showPassword}
+            autoComplete="password"
+            textContentType="password"
+            value={password}
+            onChangeText={setPassword}
+            editable={!loading}
+            onFocus={() => handleFocus('password', borderAnimationPassword)}
+            onBlur={() => handleBlur('password', borderAnimationPassword)}
+          />
+          <Pressable
+            style={styles.eyeButton}
+            onPress={togglePasswordVisibility}
+            disabled={loading}
+          >
+            <Ionicons
+              name={showPassword ? "eye-off" : "eye"}
+              size={24}
+              color="#666"
+            />
+          </Pressable>
+        </Animated.View>
+      </Animated.View>
+      
+      <Pressable 
+        onPress={navigateToForgotPassword}
+        disabled={loading}
+      >
+        <Text style={styles.forgotPassword}>¿Olvidaste tu contraseña?</Text>
+      </Pressable>
 
         <Pressable
           style={[
@@ -646,5 +721,13 @@ const styles = StyleSheet.create({
     color: "black",
     fontWeight: "600",
     fontSize: 16,
+  },
+  verificationOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'transparent',
   },
 });

@@ -5,14 +5,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from "@react-navigation/native";
 import { useCallback, useRef, useState } from "react";
 import {
-    Alert,
-    Animated,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  Alert,
+  Animated,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 import OTPVerification from "../otp/OTPVerification";
 
@@ -39,8 +39,8 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
   const [showOTP, setShowOTP] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(true);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(true);
   const [userType, setUserType] = useState<1 | 2>(1);
   const [errors, setErrors] = useState<ErrorType>({});
   const [focusedField, setFocusedField] = useState<string | null>(null);
@@ -364,15 +364,16 @@ export default function RegisterScreen() {
               {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
             </View>
             <View style={styles.inputGroup}>
-              <View style={styles.passwordHeader}>
-                <Text style={styles.label}>Contraseña</Text>
-              </View>
+              <Text style={styles.label}>Contraseña</Text>
               <Animated.View style={[styles.passwordContainer, { borderColor: getBorderColor('password', passwordBorderAnim) }]}>
                 <TextInput
-                  style={[styles.input, styles.passwordInput]}
+                  style={styles.passwordInput}
                   placeholder="••••••••"
+                  autoCapitalize="none"
                   placeholderTextColor="#666"
-                  secureTextEntry={!showPassword}
+                  keyboardType="default"
+                  secureTextEntry={showPassword}
+                  showSoftInputOnFocus={false}
                   value={password}
                   onChangeText={setPassword}
                   onFocus={() => handleFocus('password', passwordBorderAnim)}
@@ -380,27 +381,31 @@ export default function RegisterScreen() {
                 />
                 <Pressable
                   style={styles.eyeButton}
-                  onPress={() => setShowPassword(!showPassword)}
+                  onPress={() => {
+                    setShowPassword(!showPassword);
+                  }}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                   <Ionicons
-                    name={showPassword ? "eye-off" : "eye"}
-                    size={24}
-                    color="#666"
+                    name={showPassword ? "eye" : "eye-off"}
+                    size={20}
+                    color={showPassword ? "#666" : "#fff"}
                   />
                 </Pressable>
               </Animated.View>
               {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
             </View>
             <View style={styles.inputGroup}>
-              <View style={styles.passwordHeader}>
-                <Text style={styles.label}>Confirmar Contraseña</Text>
-              </View>
+              <Text style={styles.label}>Confirmar Contraseña</Text>
               <Animated.View style={[styles.passwordContainer, { borderColor: getBorderColor('confirmPassword', confirmPasswordBorderAnim) }]}>
                 <TextInput
-                  style={[styles.input, styles.passwordInput]}
+                  style={styles.passwordInput}
                   placeholder="••••••••"
+                  autoCapitalize="none"
                   placeholderTextColor="#666"
-                  secureTextEntry={!showConfirmPassword}
+                  keyboardType="default"
+                  secureTextEntry={showConfirmPassword}
+                  showSoftInputOnFocus={false}
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                   onFocus={() => handleFocus('confirmPassword', confirmPasswordBorderAnim)}
@@ -408,12 +413,15 @@ export default function RegisterScreen() {
                 />
                 <Pressable
                   style={styles.eyeButton}
-                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  onPress={() => {
+                    setShowConfirmPassword(!showConfirmPassword);
+                  }}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                   <Ionicons
-                    name={showConfirmPassword ? "eye-off" : "eye"}
-                    size={24}
-                    color="#666"
+                    name={showConfirmPassword ? "eye" : "eye-off"}
+                    size={20}
+                    color={showConfirmPassword ? "#666" : "#fff"}
                   />
                 </Pressable>
               </Animated.View>
@@ -564,22 +572,29 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   passwordContainer: {
-    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#333',
     backgroundColor: 'transparent',
+    paddingHorizontal: 16,
+    height: 56,
   },
   passwordInput: {
-    paddingRight: 48,
-    borderWidth: 0,
+    flex: 1,
+    backgroundColor: "transparent",
+    color: "white",
+    fontSize: 16,
+    paddingVertical: 0,
+    paddingRight: 8,
   },
   eyeButton: {
-    position: 'absolute',
-    right: 12,
-    top: '50%',
-    transform: [{ translateY: -12 }],
-    zIndex: 1,
+    padding: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 32,
+    minHeight: 32,
   },
   userTypeContainer: {
     marginBottom: 24,
