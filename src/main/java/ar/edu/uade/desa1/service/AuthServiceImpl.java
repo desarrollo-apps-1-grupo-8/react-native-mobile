@@ -14,6 +14,7 @@ import ar.edu.uade.desa1.domain.response.AuthRegisterResponse;
 import ar.edu.uade.desa1.domain.response.SendVerificationCodeResponse;
 import ar.edu.uade.desa1.domain.response.ValidateResetTokenResponse;
 import ar.edu.uade.desa1.domain.response.VerifyCodeResponse;
+import ar.edu.uade.desa1.exception.EmailNotVerifiedException;
 import ar.edu.uade.desa1.exception.NotFoundException;
 import ar.edu.uade.desa1.exception.UserAlreadyExistsException;
 import ar.edu.uade.desa1.repository.RoleRepository;
@@ -22,7 +23,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import java.time.LocalDateTime;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -86,18 +86,18 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthLoginResponse login(AuthLoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail().toLowerCase())
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+                .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
 
         if (!user.getEmailVerified()) {
-            return new AuthLoginResponse(false, null, false, "NEEDS_VERIFICATION");
+            throw new EmailNotVerifiedException("Email not verified");
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new BadCredentialsException("Contraseña incorrecta");
+            throw new BadCredentialsException("Invalid credentials");
         }
 
         String token = jwtUtil.generateToken(user);
-        return new AuthLoginResponse(true, token, true, null);
+        return new AuthLoginResponse(true, token, true, "LOGIN_SUCCESS");
     }
 
     public void resetPassword(PasswordResetRequest request) {
