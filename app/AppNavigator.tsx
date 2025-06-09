@@ -1,10 +1,11 @@
 import Loader from '@/components/Loader';
+import NetworkStatus from '@/components/ui/NetworkStatus';
 import { useSession } from '@/context/SessionContext';
 import { NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
+import Toast from 'react-native-toast-message';
 import AppStack from './AppStack';
 import AuthStack from './AuthStack';
-import Toast from 'react-native-toast-message';
 
 
 export default function AppNavigator() {
@@ -18,6 +19,7 @@ export default function AppNavigator() {
     return (
       <>
         <StatusBar style="light" translucent={true} />
+        <NetworkStatus />
         <NavigationContainer>
           {session ? <AppStack /> : <AuthStack />}
         </NavigationContainer>
