@@ -1,6 +1,7 @@
 import api from "@/services/api";
 import Ionicons from '@expo/vector-icons/Ionicons';
-import React, { useCallback, useEffect, useState } from "react";
+import { useFocusEffect } from '@react-navigation/native';
+import React, { useCallback, useState } from "react";
 import {
   FlatList,
   RefreshControl,
@@ -56,9 +57,11 @@ export const RoutesScreen: React.FC = () => {
     fetchRoutes(true);
   }, [fetchRoutes]);
 
-  useEffect(() => {
-    fetchRoutes();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchRoutes();
+    }, [fetchRoutes])
+  );
 
   const handleChangeRouteStatus = async (
     deliveryRouteId: number,
@@ -72,6 +75,7 @@ export const RoutesScreen: React.FC = () => {
           status,
           deliveryUserId: user?.id,
         });
+        await fetchRoutes();
       }
     } catch (error: any) {
       console.log("ocurrio un error")
