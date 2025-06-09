@@ -20,25 +20,26 @@ api.interceptors.request.use(
             return config;
         }
 
-        const token = await SecureStore.getItemAsync('session');
-        if (token && config.headers) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
+        try {
+            const token = await SecureStore.getItemAsync('session');
+            if (!token) {
+                return config;
+            }
 
-        return config;
+            // Asegurarse de que el token tenga el formato correcto
+            const formattedToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+            
+            if (config.headers) {
+                config.headers.Authorization = formattedToken;
+            }
+            
+            return config;
+        } catch (error) {
+            console.error('Error al obtener el token:', error);
+            return config;
+        }
     },
     (error) => Promise.reject(error)
-);
-
-// Interceptor to handle unauthorized responses (401)
-api.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-        if (error.response?.status === 401) {
-            await SecureStore.deleteItemAsync('session');
-        }
-        return Promise.reject(error);
-    }
 );
 
 export default api;
