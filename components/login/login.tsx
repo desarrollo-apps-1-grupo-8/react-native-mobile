@@ -142,11 +142,6 @@ export default function LoginScreen() {
       
       const data = response.data;
       
-      if (!data.success) {
-        handleLoginError(data);
-        return;
-      }
-
       // Validate token exists
       if (!data.token) {
         showError('No se recibió un token válido del servidor', 'general');
@@ -156,39 +151,36 @@ export default function LoginScreen() {
       await signIn(data.token);
 
     } catch (error: any) {
-      console.error('Login error:', error);
-      handleApiError(error);
+      if (error.response) {
+        console.log('Login error:', error.response.data);
+      } else {
+        console.log('Login error:', error.message);
+      }
+      
+      if (error.response?.status === 401) {
+        showError('Credenciales incorrectas', 'general');
+      } else if (error.response?.status === 403) {
+        setShowVerificationPrompt(true);
+        showError('Tu cuenta aún no fue verificada', 'general');
+      } else if (error.response?.status === 429) {
+        showError('Demasiados intentos. Intentá de nuevo más tarde.', 'general');
+      } else if (error.response?.status >= 500) {
+        let message = 'Error del servidor. Intentá de nuevo más tarde.';
+        if (__DEV__ && error.response?.data?.message) {
+          message = error.response.data.message;
+        }
+        showError(message, 'general');
+      } else if (error.response?.data?.message) {
+        showError(error.response.data.message, 'general');
+      } else if (error.message?.includes('Network')) {
+        showError('Error de conexión. Verificá tu conexión a internet.', 'general');
+      } else {
+        showError('No se pudo conectar al servidor.', 'general');
+      }
     } finally {
       setLoading(false);
     }
   }, [email, password, isValidEmail, signIn, showError]);
-
-  // Handle specific login errors with animations
-  const handleLoginError = useCallback((data: any) => {
-    if (data.status === 'NEEDS_VERIFICATION') {
-      setShowVerificationPrompt(true);
-      showError('Tu cuenta aún no fue verificada', 'general');
-    } else if (data.message) {
-      showError(data.message, 'general');
-    } else {
-      showError('Credenciales incorrectas', 'general');
-    }
-  }, [showError]);
-
-  // Handle API errors with animations
-  const handleApiError = useCallback((error: any) => {
-    if (error.response?.status === 429) {
-      showError('Demasiados intentos. Intentá de nuevo más tarde.', 'general');
-    } else if (error.response?.status >= 500) {
-      showError('Error del servidor. Intentá de nuevo más tarde.', 'general');
-    } else if (error.response?.data?.message) {
-      showError(error.response.data.message, 'general');
-    } else if (error.message?.includes('Network')) {
-      showError('Error de conexión. Verificá tu conexión a internet.', 'general');
-    } else {
-      showError('No se pudo conectar al servidor.', 'general');
-    }
-  }, [showError]);
 
   // Toggle password visibility
   const togglePasswordVisibility = useCallback(() => {
