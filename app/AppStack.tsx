@@ -85,7 +85,7 @@ export default function AppStack() {
         name="Shipments" 
         component={RoutesScreen}
         options={{
-          tabBarLabel: "Shipments",
+          tabBarLabel: "Envios",
         }}
       />
       {user?.role === RoleEnum.REPARTIDOR && (
@@ -94,14 +94,14 @@ export default function AppStack() {
             name="MyRoutes" 
             component={MyRoutesScreen}
             options={{
-              tabBarLabel: "My Routes",
+              tabBarLabel: "Mis rutas",
             }}
           />
           <Tab.Screen 
             name="History" 
             component={HistoryScreen}
             options={{
-              tabBarLabel: "History",
+              tabBarLabel: "Historial",
             }}
           />
         </>
@@ -110,7 +110,7 @@ export default function AppStack() {
         name="Profile" 
         component={ProfileScreen}
         options={{
-          tabBarLabel: "Profile",
+          tabBarLabel: "Perfil",
         }}
       />
     </Tab.Navigator>
