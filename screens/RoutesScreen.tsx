@@ -63,6 +63,20 @@ export const RoutesScreen: React.FC = () => {
     }, [fetchRoutes])
   );
 
+  const handleQrGeneration = async (routeId: number) => {
+    try {
+      const response = await api.get("/routes/qr?routeId=" + routeId);
+      if (!response.data || !response.data.qrCodeBase64) {
+        throw new Error('No se recibió el QR del servidor');
+      }
+      return response.data.qrCodeBase64;
+    } catch (error: any) {
+      console.error("Error al generar qr:", error);
+      throw error;
+    }
+  };
+
+
   const handleChangeRouteStatus = async (
     deliveryRouteId: number,
     status: string
@@ -109,10 +123,7 @@ export const RoutesScreen: React.FC = () => {
                 style={styles.emptyIcon}
               />
               <Text style={styles.emptySubtitle}>
-                {user?.role === RoleEnum.REPARTIDOR 
-                  ? "No tienes rutas asignadas en este momento."
-                  : "No tienes envíos en este momento."
-                }
+                  No hay envíos disponibles en este momento
               </Text>
             </View>
           }
@@ -121,6 +132,7 @@ export const RoutesScreen: React.FC = () => {
               route={item}
               role={user?.role || ""}
               onPress={(routeId: number, status: string) => handleChangeRouteStatus(routeId, status)}
+              generateQr={(routeId: number) => handleQrGeneration(routeId)}
             />
           )}
         />

@@ -1,6 +1,6 @@
 import api from "@/services/api";
 import { RoleEnum } from "@/utils/roleEnum";
-import Ionicons from '@expo/vector-icons/Ionicons';
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useFocusEffect } from "@react-navigation/native";
 import React, { useCallback, useState } from "react";
 import {
@@ -23,32 +23,35 @@ export const MyRoutesScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const insets = useSafeAreaInsets();
 
-  const fetchRoutes = useCallback(async (isRefreshing = false) => {
-    if (!session) return;
-    
-    if (isRefreshing) {
-      setRefreshing(true);
-    } else {
-      setLoading(true);
-    }
-    
-    try {
-      let response;
-      response = await api.get(`/routes/deliveryUser/${user?.id}`);
-      console.log(response)
+  const fetchRoutes = useCallback(
+    async (isRefreshing = false) => {
+      if (!session) return;
 
-      setRoutes(response.data);
-    } catch (error: any) {
-      console.error("Error al obtener las rutas:", error);
-      setRoutes([]);
-    } finally {
       if (isRefreshing) {
-        setRefreshing(false);
+        setRefreshing(true);
       } else {
-        setLoading(false);
+        setLoading(true);
       }
-    }
-  }, [session, user]);
+
+      try {
+        let response;
+        response = await api.get(`/routes/deliveryUser/${user?.id}`);
+        console.log(response);
+
+        setRoutes(response.data);
+      } catch (error: any) {
+        console.error("Error al obtener las rutas:", error);
+        setRoutes([]);
+      } finally {
+        if (isRefreshing) {
+          setRefreshing(false);
+        } else {
+          setLoading(false);
+        }
+      }
+    },
+    [session, user]
+  );
 
   const handleRefresh = useCallback(() => {
     fetchRoutes(true);
@@ -72,7 +75,6 @@ export const MyRoutesScreen: React.FC = () => {
         deliveryUserId: user?.id,
       });
       await fetchRoutes();
-
     } catch (error: any) {
       console.error("Error al cambiar estado de la ruta:", error);
     } finally {
@@ -87,8 +89,8 @@ export const MyRoutesScreen: React.FC = () => {
           data={routes}
           keyExtractor={(item) => item.id.toString()}
           refreshControl={
-            <RefreshControl 
-              refreshing={refreshing} 
+            <RefreshControl
+              refreshing={refreshing}
               onRefresh={handleRefresh}
               tintColor="#fff"
               colors={["#fff"]}
@@ -97,15 +99,13 @@ export const MyRoutesScreen: React.FC = () => {
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Ionicons 
-                name="map-outline" 
-                size={64} 
-                color="#666666" 
+              <Ionicons
+                name="map-outline"
+                size={64}
+                color="#666666"
                 style={styles.emptyIcon}
               />
-              <Text style={styles.emptyTitle}>
-                Sin rutas asignadas
-              </Text>
+              <Text style={styles.emptyTitle}>Sin rutas asignadas</Text>
               <Text style={styles.emptySubtitle}>
                 No tienes rutas asignadas en este momento.
               </Text>
@@ -115,7 +115,9 @@ export const MyRoutesScreen: React.FC = () => {
             <RouteCard
               route={item}
               role={RoleEnum.REPARTIDOR}
-              onPress={(routeId: number, status: string) => handleChangeRouteStatus(routeId, status)}
+              onPress={(routeId: number, status: string) =>
+                handleChangeRouteStatus(routeId, status)
+              }
             />
           )}
         />

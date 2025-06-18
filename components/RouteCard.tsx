@@ -1,6 +1,14 @@
-import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { useState } from "react";
+import { ActivityIndicator, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { DeliveryRouteResponseWithUserInfo } from "../types/route";
 import { RouteStatusEnum } from "../utils/routeStatusEnum";
+
+interface RouteCardProps {
+  route: DeliveryRouteResponseWithUserInfo;
+  role: string;
+  onPress?: (routeId: number, status: string) => void;
+  generateQr?: (routeId: number) => Promise<string>;
+}
 
 const statusColors: Record<string, { bg: string; text: string }> = {
   IN_TRANSIT: { bg: "#2563eb", text: "#fff" }, // Azul
@@ -12,11 +20,38 @@ const statusColors: Record<string, { bg: string; text: string }> = {
 
 const getStatusStyle = (status: string) => statusColors[status] || statusColors.DEFAULT;
 
-export const RouteCard: React.FC<any> = ({ route, role, onPress }) => {
+export const RouteCard: React.FC<RouteCardProps> = ({ route, role, onPress, generateQr}) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [qrImage, setQrImage] = useState<string | null>(null);
   const isRepartidor = role === "REPARTIDOR";
   const status = route.status;
   const statusSpanish = RouteStatusEnum[status as keyof typeof RouteStatusEnum]?.spanish || status;
   const statusStyle = getStatusStyle(status);
+
+  const handleGenerateQr = async () => {
+    if (!generateQr) return;
+    setIsLoading(true);
+    try {
+      const qrBase64 = await generateQr(route.id);
+      if (!qrBase64) {
+        throw new Error('No se recibió el QR del servidor');
+      }
+      const formattedBase64 = `data:image/png;base64,${qrBase64}`;
+      setQrImage(formattedBase64);
+    } catch (error) {
+      console.error('Error al generar QR:', error);
+      setQrImage(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  console.log('RouteCard Debug:', {
+    isRepartidor,
+    hasDeliveryUser: !!route.deliveryUserInfo,
+    status,
+    shouldShowQrButton: isRepartidor && !route.deliveryUserInfo && status === "AVAILABLE"
+  });
 
   return (
     <View style={styles.card}>
@@ -50,20 +85,57 @@ export const RouteCard: React.FC<any> = ({ route, role, onPress }) => {
         </View>
       </View>
       <View style={styles.buttonRow}>
-        {/* <TouchableOpacity style={styles.buttonSecundario}>
-          <Text style={styles.buttonText}>Ver detalles</Text>
-        </TouchableOpacity> */}
-        {isRepartidor && status === "AVAILABLE" && (
-          <TouchableOpacity style={styles.buttonPrincipal} onPress={() => onPress(route.id, "IN_PROGRESS")}> 
-            <Text style={styles.buttonText}>Asignarme ruta</Text>
-          </TouchableOpacity>
-        )}
+      {(isRepartidor && !route.deliveryUserInfo && status === "AVAILABLE") && 
+      <>
+        <TouchableOpacity 
+          style={styles.buttonPrincipal} 
+          onPress={handleGenerateQr}
+        >
+          <Text style={styles.buttonText}>Generar QR</Text>
+        </TouchableOpacity>
+      </>}
         {isRepartidor && status === "IN_PROGRESS" && (
-          <TouchableOpacity style={styles.buttonPrincipal} onPress={() => onPress(route.id, "COMPLETED")}> 
+          <TouchableOpacity style={styles.buttonPrincipal} onPress={() => onPress?.(route.id, "COMPLETED")}> 
             <Text style={styles.buttonText}>Finalizar ruta</Text>
           </TouchableOpacity>
         )}
       </View>
+
+      <Modal
+        visible={isLoading || !!qrImage}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => {
+          setIsLoading(false);
+          setQrImage(null);
+        }}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            {isLoading ? (
+              <>
+                <ActivityIndicator size="large" color="#2563eb" />
+                <Text style={styles.modalText}>Generando QR...</Text>
+              </>
+            ) : qrImage ? (
+              <>
+                <Text style={styles.modalText}>Escanea el siguiente QR para asignarte la ruta:</Text>
+                <Image 
+                  source={{ uri: qrImage }}
+                  style={styles.qrImage}
+                  resizeMode="contain"
+                />
+                <TouchableOpacity 
+                  style={styles.closeButton}
+                  onPress={() => setQrImage(null)}
+                >
+                  <Text style={styles.closeButtonText}>Cerrar</Text>
+                </TouchableOpacity>
+              </>
+            ) : null}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -136,5 +208,41 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 14,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+  },
+  modalContent: {
+    backgroundColor: '#18181b',
+    borderRadius: 12,
+    padding: 24,
+    alignItems: 'center',
+    width: '80%',
+  },
+  modalText: {
+    color: '#fff',
+    fontSize: 16,
+    marginTop: 16,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  qrImage: {
+    width: 200,
+    height: 200,
+    marginBottom: 16,
+  },
+  closeButton: {
+    backgroundColor: '#2563eb',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  closeButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 }); 
