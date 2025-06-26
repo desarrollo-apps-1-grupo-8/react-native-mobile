@@ -13,6 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.core.Authentication;
 
+import ar.edu.uade.desa1.service.FirebaseMessagingService;
+import ar.edu.uade.desa1.service.TokenStorageService;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -24,30 +27,48 @@ public class DeliveryRouteServiceImpl implements DeliveryRouteService {
 
     private final DeliveryRouteRepository deliveryRouteRepository;
     private final UserRepository userRepository;
+    private final TokenStorageService tokenStorageService;
+    private final FirebaseMessagingService firebaseMessagingService;
 
     @Override
     @Transactional
     public DeliveryRoute createRoute(CreateRouteRequest request) {
 
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new NotFoundException("User not found for id: " + request.getUserId()));
+    User user = userRepository.findById(request.getUserId())
+            .orElseThrow(() -> new NotFoundException("User not found for id: " + request.getUserId()));
 
-        try {
-            DeliveryRoute route = DeliveryRoute.builder()
-                    .packageInfo(request.getPackageInfo())
-                    .origin(request.getOrigin())
-                    .destination(request.getDestination())
-                    .status(request.getStatus())
-                    .user(user)
-                    .createdAt(LocalDateTime.now())
-                    .build();
+    try {
+        DeliveryRoute route = DeliveryRoute.builder()
+                .packageInfo(request.getPackageInfo())
+                .origin(request.getOrigin())
+                .destination(request.getDestination())
+                .status(request.getStatus())
+                .user(user)
+                .createdAt(LocalDateTime.now())
+                .build();
 
-            return deliveryRouteRepository.save(route);
+        DeliveryRoute savedRoute = deliveryRouteRepository.save(route);
 
-        } catch (Exception e) {
-            throw new RuntimeException("Error creating route: " + e.getMessage());
+        //Enviar notificación al repartidor
+        String token = tokenStorageService.getToken(user.getId().toString());
+        if (token != null) {
+            try {
+                firebaseMessagingService.sendNotification(
+                        "Nueva ruta disponible",
+                        "Se te ha asignado una nueva entrega",
+                        token
+                );
+            } catch (Exception e) {
+                System.err.println("⚠️ Error enviando notificación FCM: " + e.getMessage());
+            }
         }
+
+        return savedRoute;
+
+    } catch (Exception e) {
+        throw new RuntimeException("Error creating route: " + e.getMessage());
     }
+}
 
     @Override
     public List<DeliveryRouteResponse> getAllRoutes() {
