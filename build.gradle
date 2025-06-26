@@ -32,6 +32,7 @@ dependencies {
 
 	implementation 'org.springframework.boot:spring-boot-starter'
 	implementation 'com.google.firebase:firebase-admin:9.2.0'
+
 	
 	// JWT Dependencies
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
@@ -45,6 +46,15 @@ dependencies {
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
+
+configurations.all {
+    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+        if (details.requested.group == 'com.google.firebase' && details.requested.name == 'firebase-admin') {
+            details.useVersion '9.2.0'
+        }
+    }
+}
+
 
 tasks.named('test') {
 	useJUnitPlatform()
