@@ -15,6 +15,8 @@ import {
   View,
 } from "react-native";
 import OTPVerification from "../otp/OTPVerification";
+import { registerForPushNotificationsAsync } from "@/utils/notificationSetup";
+
 
 type ErrorType = {
   message: string;
@@ -217,8 +219,13 @@ export default function LoginScreen() {
       setShowSuccessAnimation(true);
       setTimeout(async () => {
         setShowSuccessAnimation(false);
+
+        // Enviar token de notificaciones push al backend
+        await registerForPushNotificationsAsync(data.user.id);
+
         await signIn(data.token); // navega a la siguiente pantalla desde signIn()
-      }, 2000); // animación por 2 segundos
+      }, 2000);
+
     } catch (error: any) {
       if (error.response) {
         console.log("Login error:", error.response.data);
