@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import OTPVerification from '../otp/OTPVerification';
+import api from '@/services/api';
  
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
@@ -13,8 +14,29 @@ export default function ForgotPasswordScreen() {
       return;
     }
  
-    setLoading(true);
-    setShowOtp(true);
+    try {
+      setLoading(true);
+      
+      // Primero verificamos si el usuario existe y enviamos el código
+      const response = await api.post('/forgot-password', { email: email.trim().toLowerCase() });
+      
+      if (response.data.success) {
+        setShowOtp(true);
+      } else {
+        Alert.alert('Error', response.data.message || 'No se pudo enviar el código.');
+      }
+    } catch (error: any) {
+      console.error('Forgot password error:', error);
+      if (error.response?.status === 404) {
+        Alert.alert('Error', 'No existe una cuenta con ese email.');
+      } else if (error.response?.data?.message) {
+        Alert.alert('Error', error.response.data.message);
+      } else {
+        Alert.alert('Error', 'No se pudo conectar al servidor.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
  
   if (showOtp) {

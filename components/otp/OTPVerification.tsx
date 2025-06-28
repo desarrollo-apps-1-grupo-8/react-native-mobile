@@ -142,7 +142,9 @@ export default function OTPVerification({ email, isPasswordRecovery = false}: OT
       setLoading(true);
       resetStatus();
       
-      const response = await api.post('/verify-code', { 
+      // Use different endpoint based on context
+      const endpoint = isPasswordRecovery ? '/verify-reset-code' : '/verify-code';
+      const response = await api.post(endpoint, { 
         email, 
         verificationCode: verificationCode,
         recoverPassword: isPasswordRecovery
@@ -199,7 +201,9 @@ export default function OTPVerification({ email, isPasswordRecovery = false}: OT
         const now = Date.now();
         await AsyncStorage.setItem('otp_last_resend', now.toString());
       }
-      const response = await api.post('/send-verification-code', { email, recoverPassword: isPasswordRecovery });
+      // Use different endpoint based on whether it's password recovery or registration
+      const endpoint = isPasswordRecovery ? '/forgot-password' : '/send-verification-code';
+      const response = await api.post(endpoint, { email, recoverPassword: isPasswordRecovery });
 
       if (response.data.success) {
         if (isResend) {
