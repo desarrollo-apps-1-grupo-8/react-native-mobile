@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Linking, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { RouteStatusEnum } from "../utils/routeStatusEnum";
 
 const statusColors: Record<string, { bg: string; text: string }> = {
@@ -17,6 +17,27 @@ export const RouteCard: React.FC<any> = ({ route, role, onPress }) => {
   const status = route.status;
   const statusSpanish = RouteStatusEnum[status as keyof typeof RouteStatusEnum]?.spanish || status;
   const statusStyle = getStatusStyle(status);
+
+  const handleAssignRoute = () => {
+    // Primero cambiamos el estado de la ruta
+    onPress(route.id, "IN_PROGRESS");
+
+    // Luego intentamos abrir Google Maps
+    const location = route.destination;
+    const url = Platform.select({
+      ios: `maps:0,0?q=${encodeURIComponent(location)}`,
+      android: `geo:0,0?q=${encodeURIComponent(location)}`
+    });
+
+    Linking.canOpenURL(url)
+      .then((supported) => {
+        const mapUrl = supported
+          ? url
+          : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
+        return Linking.openURL(mapUrl);
+      })
+      .catch((err) => console.error("Error al abrir Google Maps:", err));
+  };
 
   return (
     <View style={styles.card}>
@@ -54,9 +75,12 @@ export const RouteCard: React.FC<any> = ({ route, role, onPress }) => {
           <Text style={styles.buttonText}>Ver detalles</Text>
         </TouchableOpacity> */}
         {isRepartidor && status === "AVAILABLE" && (
-          <TouchableOpacity style={styles.buttonPrincipal} onPress={() => onPress(route.id, "IN_PROGRESS")}> 
+          <TouchableOpacity style={styles.buttonPrincipal} onPress={handleAssignRoute}>
             <Text style={styles.buttonText}>Asignarme ruta</Text>
           </TouchableOpacity>
+          /*<TouchableOpacity style={styles.buttonPrincipal} onPress={() => onPress(route.id, "IN_PROGRESS")}> 
+            <Text style={styles.buttonText}>Asignarme ruta</Text>       
+          </TouchableOpacity>*/
         )}
         {isRepartidor && status === "IN_PROGRESS" && (
           <TouchableOpacity style={styles.buttonPrincipal} onPress={() => onPress(route.id, "COMPLETED")}> 
