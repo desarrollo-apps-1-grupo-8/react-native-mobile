@@ -181,7 +181,7 @@ export default function RegisterScreen() {
       setLoading(true);
 
       await api.post("/register", { 
-        email, 
+        email: email.trim().toLowerCase(), 
         password, 
         firstName, 
         lastName, 
