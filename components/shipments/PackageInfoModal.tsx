@@ -1,19 +1,13 @@
-import React from 'react';
-import { View, Text, StyleSheet, Modal, Pressable, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 interface PackageInfo {
   id: string;
   packageCode: string;
   description: string;
-  weight: string;
-  dimensions: string;
-  location: string;
-  shelf: string;
   recipient: {
     name: string;
     address: string;
-    phone: string;
   };
   route?: {
     id: number;
@@ -26,16 +20,35 @@ interface PackageInfoModalProps {
   visible: boolean;
   packageInfo: PackageInfo | null;
   onClose: () => void;
-  onStartDelivery: () => void;
 }
 
 export default function PackageInfoModal({ 
   visible, 
   packageInfo, 
-  onClose, 
-  onStartDelivery 
+  onClose
 }: PackageInfoModalProps) {
   if (!packageInfo) return null;
+
+  const handleOpenMaps = () => {
+    if (packageInfo.route && packageInfo.route.destination) {
+      const location = packageInfo.route.destination;
+      const url = Platform.select({
+        ios: `maps:0,0?q=${encodeURIComponent(location)}`,
+        android: `geo:0,0?q=${encodeURIComponent(location)}`
+      });
+
+      if (url) {
+        Linking.canOpenURL(url)
+          .then((supported) => {
+            const mapUrl = supported
+              ? url
+              : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
+            return Linking.openURL(mapUrl);
+          })
+          .catch((err) => console.error("Error al abrir Google Maps:", err));
+      }
+    }
+  };
 
   return (
     <Modal
@@ -64,27 +77,7 @@ export default function PackageInfoModal({
                 <Text style={styles.label}>Descripción:</Text>
                 <Text style={styles.value}>{packageInfo.description}</Text>
               </View>
-              <View style={styles.infoRow}>
-                <Text style={styles.label}>Peso:</Text>
-                <Text style={styles.value}>{packageInfo.weight}</Text>
-              </View>
-              <View style={styles.infoRow}>
-                <Text style={styles.label}>Dimensiones:</Text>
-                <Text style={styles.value}>{packageInfo.dimensions}</Text>
-              </View>
             </View>
-
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Ubicación en Depósito</Text>
-              <View style={styles.locationBox}>
-                <Ionicons name="location" size={20} color="white" />
-                <View style={styles.locationInfo}>
-                  <Text style={styles.locationText}>Área: {packageInfo.location}</Text>
-                  <Text style={styles.locationText}>Estante: {packageInfo.shelf}</Text>
-                </View>
-              </View>
-            </View>
-
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Información del Destinatario</Text>
               <View style={styles.infoRow}>
@@ -94,10 +87,6 @@ export default function PackageInfoModal({
               <View style={styles.infoRow}>
                 <Text style={styles.label}>Dirección:</Text>
                 <Text style={styles.value}>{packageInfo.recipient.address}</Text>
-              </View>
-              <View style={styles.infoRow}>
-                <Text style={styles.label}>Teléfono:</Text>
-                <Text style={styles.value}>{packageInfo.recipient.phone}</Text>
               </View>
             </View>
 
@@ -116,13 +105,13 @@ export default function PackageInfoModal({
                   <Text style={styles.label}>Destino:</Text>
                   <Text style={styles.value}>{packageInfo.route.destination}</Text>
                 </View>
+                <Pressable style={styles.mapsButton} onPress={handleOpenMaps}>
+                  <Ionicons name="location" size={20} color="white" style={styles.mapsIcon} />
+                  <Text style={styles.mapsButtonText}>Ver ubicación en Maps</Text>
+                </Pressable>
               </View>
             )}
           </ScrollView>
-
-          <Pressable style={styles.startButton} onPress={onStartDelivery}>
-            <Text style={styles.startButtonText}>Iniciar Entrega</Text>
-          </Pressable>
         </View>
       </View>
     </Modal>
@@ -189,35 +178,22 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'right',
   },
-  locationBox: {
-    backgroundColor: '#000',
+  mapsButton: {
+    backgroundColor: '#2563eb',
     borderRadius: 8,
-    padding: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginTop: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#333',
+    justifyContent: 'center',
   },
-  locationInfo: {
-    marginLeft: 12,
+  mapsIcon: {
+    marginRight: 8,
   },
-  locationText: {
+  mapsButtonText: {
     color: 'white',
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  startButton: {
-    backgroundColor: 'white',
-    paddingVertical: 16,
-    marginHorizontal: 20,
-    marginTop: 20,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  startButtonText: {
-    color: 'black',
     fontWeight: '600',
-    fontSize: 18,
+    fontSize: 16,
   },
 });
