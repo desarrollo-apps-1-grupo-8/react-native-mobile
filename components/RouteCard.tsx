@@ -53,8 +53,14 @@ export const RouteCard: React.FC<any> = ({ route, role, onPress }) => {
       <Text style={styles.value}>{route.origin}</Text>
       <Text style={styles.label}>Destino:</Text>
       <Text style={styles.value}>{route.destination}</Text>
-      <Text style={styles.label}>Cliente:</Text>
-      <Text style={styles.value}>{route.userInfo}</Text>
+      {
+        route.userInfo && (
+          <>
+                <Text style={styles.label}>Cliente:</Text>
+                <Text style={styles.value}>{route.userInfo}</Text>
+          </>
+        )
+      }
       {route.deliveryUserInfo && 
       <>
         <Text style={styles.label}>Repartidor:</Text>
@@ -74,14 +80,6 @@ export const RouteCard: React.FC<any> = ({ route, role, onPress }) => {
         {/* <TouchableOpacity style={styles.buttonSecundario}>
           <Text style={styles.buttonText}>Ver detalles</Text>
         </TouchableOpacity> */}
-        {isRepartidor && status === "AVAILABLE" && (
-          <TouchableOpacity style={styles.buttonPrincipal} onPress={handleAssignRoute}>
-            <Text style={styles.buttonText}>Asignarme ruta</Text>
-          </TouchableOpacity>
-          /*<TouchableOpacity style={styles.buttonPrincipal} onPress={() => onPress(route.id, "IN_PROGRESS")}> 
-            <Text style={styles.buttonText}>Asignarme ruta</Text>       
-          </TouchableOpacity>*/
-        )}
         {isRepartidor && status === "IN_PROGRESS" && (
           <TouchableOpacity style={styles.buttonPrincipal} onPress={() => onPress(route.id, "COMPLETED")}> 
             <Text style={styles.buttonText}>Finalizar ruta</Text>
