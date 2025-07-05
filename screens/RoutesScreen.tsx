@@ -2,6 +2,7 @@ import api from "@/services/api";
 import { registerForPushNotificationsAsync } from "@/utils/notificationSetup";
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect } from '@react-navigation/native';
+import * as SecureStore from 'expo-secure-store';
 import React, { useCallback, useState } from "react";
 
 import {
@@ -63,11 +64,21 @@ export const RoutesScreen: React.FC = () => {
   useCallback(() => {
     fetchRoutes();
 
-    const enviarToken = async () => {
-      if (user?.id) {
-        await registerForPushNotificationsAsync(user.id); //se guarda el token para las notificaciones en el back
-      }
-    };
+console.log("📦 user:", user);
+console.log("📦 session:", session);
+
+const enviarToken = async () => {
+  if (!user?.id) return;
+
+  const token = await SecureStore.getItemAsync("session");
+
+  if (!token) {
+    console.log("No se encontró token en SecureStore");
+    return;
+  }
+
+  await registerForPushNotificationsAsync(user.id, token);
+};
 
     enviarToken();
   }, [fetchRoutes, user])
