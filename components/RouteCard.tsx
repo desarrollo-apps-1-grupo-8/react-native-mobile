@@ -23,20 +23,26 @@ export const RouteCard: React.FC<any> = ({ route, role, onPress }) => {
     onPress(route.id, "IN_PROGRESS");
 
     // Luego intentamos abrir Google Maps
+    openInMaps();
+  };
+
+  const openInMaps = () => {
     const location = route.destination;
     const url = Platform.select({
       ios: `maps:0,0?q=${encodeURIComponent(location)}`,
       android: `geo:0,0?q=${encodeURIComponent(location)}`
     });
 
-    Linking.canOpenURL(url)
-      .then((supported) => {
-        const mapUrl = supported
-          ? url
-          : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
-        return Linking.openURL(mapUrl);
-      })
-      .catch((err) => console.error("Error al abrir Google Maps:", err));
+    if (url) {
+      Linking.canOpenURL(url)
+        .then((supported) => {
+          const mapUrl = supported
+            ? url
+            : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
+          return Linking.openURL(mapUrl);
+        })
+        .catch((err) => console.error("Error al abrir Google Maps:", err));
+    }
   };
 
   return (
@@ -81,9 +87,14 @@ export const RouteCard: React.FC<any> = ({ route, role, onPress }) => {
           <Text style={styles.buttonText}>Ver detalles</Text>
         </TouchableOpacity> */}
         {isRepartidor && status === "IN_PROGRESS" && (
-          <TouchableOpacity style={styles.buttonPrincipal} onPress={() => onPress(route.id, "COMPLETED")}> 
-            <Text style={styles.buttonText}>Finalizar ruta</Text>
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity style={styles.buttonSecundario} onPress={openInMaps}> 
+              <Text style={styles.buttonText}>Ver en Maps</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.buttonPrincipal} onPress={() => onPress(route.id, "COMPLETED")}> 
+              <Text style={styles.buttonText}>Finalizar ruta</Text>
+            </TouchableOpacity>
+          </>
         )}
       </View>
     </View>

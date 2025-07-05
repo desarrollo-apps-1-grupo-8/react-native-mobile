@@ -95,6 +95,7 @@ export default function AppStack() {
             component={MyRoutesScreen}
             options={{
               tabBarLabel: "Mis rutas",
+              headerShown: false,
             }}
           />
           <Tab.Screen 
