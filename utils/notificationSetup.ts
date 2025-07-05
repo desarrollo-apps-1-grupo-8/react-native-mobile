@@ -1,6 +1,5 @@
-import * as Notifications from 'expo-notifications';
-import Constants from 'expo-constants';
 import axios from 'axios';
+import * as Notifications from 'expo-notifications';
 
 export async function registerForPushNotificationsAsync(userId: string) {
 try {

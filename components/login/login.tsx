@@ -15,7 +15,6 @@ import {
   View,
 } from "react-native";
 import OTPVerification from "../otp/OTPVerification";
-import { registerForPushNotificationsAsync } from "@/utils/notificationSetup";
 
 
 type ErrorType = {
@@ -25,7 +24,7 @@ type ErrorType = {
 
 export default function LoginScreen() {
   const navigation = useNavigation<any>();
-  const { signIn } = useSession();
+  const { signIn, user } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -221,7 +220,7 @@ export default function LoginScreen() {
         setShowSuccessAnimation(false);
 
         // Enviar token de notificaciones push al backend
-        await registerForPushNotificationsAsync(data.user.id);
+        //await registerForPushNotificationsAsync(user?.id);
 
         await signIn(data.token); // navega a la siguiente pantalla desde signIn()
       }, 2000);

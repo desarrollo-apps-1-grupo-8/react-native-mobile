@@ -1,7 +1,9 @@
 import api from "@/services/api";
+import { registerForPushNotificationsAsync } from "@/utils/notificationSetup";
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useState } from "react";
+
 import {
   FlatList,
   RefreshControl,
@@ -58,10 +60,19 @@ export const RoutesScreen: React.FC = () => {
   }, [fetchRoutes]);
 
   useFocusEffect(
-    useCallback(() => {
-      fetchRoutes();
-    }, [fetchRoutes])
-  );
+  useCallback(() => {
+    fetchRoutes();
+
+    const enviarToken = async () => {
+      if (user?.id) {
+        await registerForPushNotificationsAsync(user.id); //se guarda el token para las notificaciones en el back
+      }
+    };
+
+    enviarToken();
+  }, [fetchRoutes, user])
+);
+
 
   const handleChangeRouteStatus = async (
     deliveryRouteId: number,
