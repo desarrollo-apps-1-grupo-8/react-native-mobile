@@ -1,24 +1,43 @@
 package ar.edu.uade.desa1.service;
 
-import com.google.firebase.messaging.*;
+import okhttp3.*;
+import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
-import java.util.concurrent.ExecutionException;
+import java.io.IOException;
 
 @Service
 public class FirebaseMessagingService {
 
-    public String sendNotification(String title, String body, String token) throws InterruptedException, ExecutionException {
-        Notification notification = Notification.builder()
-            .setTitle(title)
-            .setBody(body)
-            .build();
+    private final OkHttpClient client = new OkHttpClient();
 
-        Message message = Message.builder()
-            .setToken(token)
-            .setNotification(notification)
-            .build();
+    public void sendNotification(String title, String message, String expoPushToken) throws IOException {
+        if (!expoPushToken.startsWith("ExponentPushToken")) {
+            throw new IllegalArgumentException(" Token inválido: no es un ExpoPushToken");
+        }
 
-        return FirebaseMessaging.getInstance().sendAsync(message).get();
+        MediaType JSON = MediaType.get("application/json; charset=utf-8");
+
+        JSONObject json = new JSONObject();
+        json.put("to", expoPushToken);
+        json.put("title", title);
+        json.put("body", message);
+
+        RequestBody body = RequestBody.create(json.toString(), JSON);
+        Request request = new Request.Builder()
+                .url("https://exp.host/--/api/v2/push/send")
+                .post(body)
+                .addHeader("Accept", "application/json")
+                .addHeader("Accept-Encoding", "gzip, deflate")
+                .addHeader("Content-Type", "application/json")
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                System.err.println(" Error al enviar push a Expo: " + response.code() + " - " + response.message());
+            } else {
+                System.out.println(" Push enviada con éxito. Respuesta de Expo: " + response.body().string());
+            }
+        }
     }
 }

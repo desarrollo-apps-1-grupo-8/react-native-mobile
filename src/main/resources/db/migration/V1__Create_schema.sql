@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
     last_name VARCHAR(100) NOT NULL,
     dni VARCHAR(8) NOT NULL UNIQUE,
     phone VARCHAR(20),
+    push_token VARCHAR(255),
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     role_id BIGINT NOT NULL,

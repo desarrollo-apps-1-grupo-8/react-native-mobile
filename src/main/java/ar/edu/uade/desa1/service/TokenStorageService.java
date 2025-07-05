@@ -1,20 +1,33 @@
 package ar.edu.uade.desa1.service;
 
+import ar.edu.uade.desa1.repository.UserRepository;
+import ar.edu.uade.desa1.domain.entity.User;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @Service
+@RequiredArgsConstructor
 public class TokenStorageService {
 
-    private final Map<String, String> tokensByUser = new HashMap<>();
+    private final UserRepository userRepository;
 
+    @Transactional
     public void saveToken(String userId, String token) {
-        tokensByUser.put(userId, token);
+        Long id = Long.parseLong(userId);
+        User user = userRepository.findById(id).orElse(null);
+        if (user != null) {
+            user.setPushToken(token);
+            userRepository.save(user);
+        }
     }
 
     public String getToken(String userId) {
-        return tokensByUser.get(userId);
+        Long id = Long.parseLong(userId);
+        return userRepository.findById(id)
+            .map(User::getPushToken)
+            .orElse(null);
     }
 }
+
+

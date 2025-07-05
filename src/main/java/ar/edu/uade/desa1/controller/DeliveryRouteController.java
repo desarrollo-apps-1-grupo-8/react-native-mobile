@@ -10,6 +10,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import org.springframework.security.core.Authentication;
+import ar.edu.uade.desa1.service.TokenStorageService;
+import ar.edu.uade.desa1.service.FirebaseMessagingService;
+
+
 
 @RestController
 @RequestMapping("/api/v1/routes")
@@ -17,11 +21,35 @@ import org.springframework.security.core.Authentication;
 public class DeliveryRouteController {
 
     private final DeliveryRouteService deliveryRouteService;
+    private final TokenStorageService tokenStorageService;
+    private final FirebaseMessagingService firebaseMessagingService;
 
     @PostMapping
     public ResponseEntity<DeliveryRoute> createRoute(@RequestBody CreateRouteRequest request) {
-        return ResponseEntity.ok(deliveryRouteService.createRoute(request));
+    DeliveryRoute createdRoute = deliveryRouteService.createRoute(request);
+
+    if (request.getDeliveryUserId() != null) {
+        String pushToken = tokenStorageService.getToken(request.getDeliveryUserId().toString());
+
+        if (pushToken != null) {
+            try {
+                firebaseMessagingService.sendNotification(
+                    "¡Nueva ruta asignada!",
+                    "Tenés una nueva entrega pendiente. Revisá la app.",
+                    pushToken
+                );
+                System.out.println("Push enviada al repartidor con ID: " + request.getDeliveryUserId());
+            } catch (Exception e) {
+                System.out.println("Error al enviar push: " + e.getMessage());
+            }
+        } else {
+            System.out.println("Repartidor sin token registrado para push.");
+        }
     }
+
+    return ResponseEntity.ok(createdRoute);
+}
+
 
     @GetMapping
     public ResponseEntity<List<DeliveryRouteResponse>> getAllRoutes() {

@@ -32,6 +32,8 @@ dependencies {
 
 	implementation 'org.springframework.boot:spring-boot-starter'
 	implementation 'com.google.firebase:firebase-admin:9.2.0'
+	implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+	implementation 'org.json:json:20240303'
 
 	
 	// JWT Dependencies
