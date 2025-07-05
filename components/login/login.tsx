@@ -507,7 +507,7 @@ export default function LoginScreen() {
         </Pressable>
       </View>
 
-      {/* 🚀 Animación de éxito */}
+      {/* Animación de éxito */}
       {showSuccessAnimation && (
         <Modal transparent animationType="fade">
           <View
