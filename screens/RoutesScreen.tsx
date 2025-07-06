@@ -15,6 +15,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { RouteCard } from "../components/RouteCard";
 import QRScanner from "../components/scanner/QRScanner";
+import CompletionCodeModal from "../components/shipments/CompletionCodeModal";
 import PackageInfoModal from "../components/shipments/PackageInfoModal";
 import { useSession } from "../context/SessionContext";
 import { DeliveryRouteResponseWithUserInfo } from "../types/route";
@@ -28,6 +29,9 @@ export const RoutesScreen: React.FC = () => {
   const [showScanner, setShowScanner] = useState(false);
   const [showPackageInfo, setShowPackageInfo] = useState(false);
   const [packageInfo, setPackageInfo] = useState<any>(null);
+  const [showCompletionCode, setShowCompletionCode] = useState(false);
+  const [completionCode, setCompletionCode] = useState<string>('');
+
   const insets = useSafeAreaInsets();
 
   const fetchRoutes = useCallback(async (isRefreshing = false) => {
@@ -47,6 +51,10 @@ export const RoutesScreen: React.FC = () => {
       } else {
         response = await api.get(`/routes/user/${user?.id}`);
       }
+      
+      console.log("Rutas recibidas:", JSON.stringify(response.data, null, 2));
+      console.log("Rol del usuario:", user?.role);
+      
       setRoutes(response.data);
     } catch (error: any) {
       console.error("Error al obtener las rutas:", error);
@@ -83,14 +91,24 @@ export const RoutesScreen: React.FC = () => {
           deliveryUserId: user?.id,
         });
         await fetchRoutes();
+      } else if (user?.role === RoleEnum.USUARIO) {
+        // If user is a regular user, show the completion code
+        const route = routes.find(r => r.id === deliveryRouteId);
+        console.log("Ruta seleccionada:", route);
+        if (route && route.completionCode) {
+          setCompletionCode(route.completionCode);
+          setShowCompletionCode(true);
+        }
       }
     } catch (error: any) {
-      console.log("ocurrio un error")
       console.error("Error al cambiar estado de la ruta:", error);
+      Alert.alert('Error', 'No se pudo actualizar el estado de la ruta');
     } finally {
       setLoading(false);
     }
   };
+
+
 
   const handleQRScan = async (data: string) => {
     try {
@@ -136,6 +154,14 @@ export const RoutesScreen: React.FC = () => {
     }
   };
 
+  const handleViewCompletionCode = (route: DeliveryRouteResponseWithUserInfo) => {
+    console.log("Mostrando código de confirmación:", route.completionCode);
+    if (route.completionCode) {
+      setCompletionCode(route.completionCode);
+      setShowCompletionCode(true);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={[styles.container, { paddingTop: insets.top + 16 }]}>
@@ -167,13 +193,18 @@ export const RoutesScreen: React.FC = () => {
               </Text>
             </View>
           }
-          renderItem={({ item }) => (
-            <RouteCard
-              route={item}
-              role={user?.role || ""}
-              onPress={(routeId: number, status: string) => handleChangeRouteStatus(routeId, status)}
-            />
-          )}
+          renderItem={({ item }) => {
+            console.log(`Renderizando ruta ${item.id}, rol: ${user?.role}, tiene código: ${!!item.completionCode}`);
+            return (
+              <RouteCard
+                route={item}
+                role={user?.role || ""}
+                onPress={(routeId: number, status: string) => handleChangeRouteStatus(routeId, status)}
+                onViewCode={user?.role === RoleEnum.USUARIO ? () => handleViewCompletionCode(item) : undefined}
+                showCodeButton={user?.role === RoleEnum.USUARIO && !!item.completionCode}
+              />
+            );
+          }}
         />
         
         {user?.role === RoleEnum.REPARTIDOR && (
@@ -196,6 +227,14 @@ export const RoutesScreen: React.FC = () => {
           packageInfo={packageInfo}
           onClose={() => setShowPackageInfo(false)}
         />
+
+        <CompletionCodeModal
+          visible={showCompletionCode}
+          completionCode={completionCode}
+          onClose={() => setShowCompletionCode(false)}
+        />
+
+
       </View>
     </SafeAreaView>
   );
