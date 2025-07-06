@@ -1,4 +1,5 @@
 //	Pantalla principal de login (UI y lógica)
+import OTPVerification from "@/components/otp/OTPVerification";
 import { useSession } from "@/context/SessionContext";
 import api from "@/services/api";
 import { Ionicons } from "@expo/vector-icons";
@@ -14,7 +15,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-import OTPVerification from "../otp/OTPVerification";
 
 
 type ErrorType = {

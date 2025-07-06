@@ -1,4 +1,4 @@
-import Loader from '@/components/Loader';
+import Loader from '@/components/ui/Loader';
 import NetworkStatus from '@/components/ui/NetworkStatus';
 import { useSession } from '@/context/SessionContext';
 import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
@@ -16,16 +16,15 @@ export default function AppNavigator() {
   useEffect(() => {
   const subscription = Notifications.addNotificationResponseReceivedListener(response => {
     const data = response.notification.request.content.data;
-    console.log('Notificación tocada, data:', data);
 
     //redireccion a shipments
     if (data?.target === 'Shipments') {
-      navigationRef.current?.navigate('Shipments');
+      navigationRef.current?.navigate('ShipmentsScreen');
     }
 
     //redireccion a mis envios
     if (data?.target === 'MyRoutes') {
-      navigationRef.current?.navigate('MyRoutes');
+      navigationRef.current?.navigate('MyRoutesScreen');
     }
   });
 
@@ -47,5 +46,3 @@ export default function AppNavigator() {
     </>
   );
 }
-
-

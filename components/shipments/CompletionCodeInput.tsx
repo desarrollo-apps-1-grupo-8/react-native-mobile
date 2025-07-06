@@ -1,6 +1,6 @@
-import { Feather } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
-import { useEffect, useRef, useState } from 'react';
+import { Feather } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
+import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   KeyboardAvoidingView,
@@ -10,8 +10,8 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  View
-} from 'react-native';
+  View,
+} from "react-native";
 
 interface CompletionCodeInputProps {
   visible: boolean;
@@ -20,18 +20,19 @@ interface CompletionCodeInputProps {
   routeId: number;
 }
 
-type VerificationStatus = 'idle' | 'success' | 'error' | 'loading';
+type VerificationStatus = "idle" | "success" | "error" | "loading";
 
 export default function CompletionCodeInput({
   visible,
   onClose,
   onSubmit,
-  routeId
+  routeId,
 }: CompletionCodeInputProps) {
-  const [code, setCode] = useState(['', '', '', '', '', '']);
-  const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>('idle');
-  const [statusMessage, setStatusMessage] = useState('');
-  
+  const [code, setCode] = useState(["", "", "", "", "", ""]);
+  const [verificationStatus, setVerificationStatus] =
+    useState<VerificationStatus>("idle");
+  const [statusMessage, setStatusMessage] = useState("");
+
   const inputRefs = useRef<Array<TextInput | null>>([]);
   const shakeAnimation = useRef(new Animated.Value(0)).current;
   const statusOpacity = useRef(new Animated.Value(0)).current;
@@ -40,9 +41,9 @@ export default function CompletionCodeInput({
   useEffect(() => {
     if (visible) {
       // Reset state when modal opens
-      setCode(['', '', '', '', '', '']);
-      setVerificationStatus('idle');
-      setStatusMessage('');
+      setCode(["", "", "", "", "", ""]);
+      setVerificationStatus("idle");
+      setStatusMessage("");
       setTimeout(() => {
         inputRefs.current[0]?.focus();
       }, 300);
@@ -70,7 +71,7 @@ export default function CompletionCodeInput({
         toValue: 0,
         duration: 100,
         useNativeDriver: true,
-      })
+      }),
     ]).start();
   };
 
@@ -92,8 +93,8 @@ export default function CompletionCodeInput({
   };
 
   const resetStatus = () => {
-    setVerificationStatus('idle');
-    setStatusMessage('');
+    setVerificationStatus("idle");
+    setStatusMessage("");
     animateStatus(false);
   };
 
@@ -110,7 +111,7 @@ export default function CompletionCodeInput({
     }
 
     if (text && index === 5) {
-      const completeCode = [...newCode].join('');
+      const completeCode = [...newCode].join("");
       if (completeCode.length === 6) {
         handleVerify(completeCode);
       }
@@ -118,32 +119,32 @@ export default function CompletionCodeInput({
   };
 
   const handleKeyPress = (e: any, index: number) => {
-    if (e.nativeEvent.key === 'Backspace' && !code[index] && index > 0) {
+    if (e.nativeEvent.key === "Backspace" && !code[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
       const newCode = [...code];
-      newCode[index-1] = '';
+      newCode[index - 1] = "";
       setCode(newCode);
     }
   };
 
   const handleVerify = async (completionCode: string) => {
     try {
-      setVerificationStatus('loading');
+      setVerificationStatus("loading");
       await onSubmit(completionCode);
-      
-      setVerificationStatus('success');
-      setStatusMessage('Entrega confirmada correctamente');
+
+      setVerificationStatus("success");
+      setStatusMessage("Entrega confirmada correctamente");
       animateStatus(true);
-      
+
       setTimeout(() => {
         onClose();
       }, 1500);
     } catch (error: any) {
-      setVerificationStatus('error');
-      setStatusMessage(error.message || 'Código inválido');
+      setVerificationStatus("error");
+      setStatusMessage(error.message || "Código inválido");
       animateStatus(true);
       animateError();
-      setCode(['', '', '', '', '', '']);
+      setCode(["", "", "", "", "", ""]);
       inputRefs.current[0]?.focus();
     }
   };
@@ -157,7 +158,7 @@ export default function CompletionCodeInput({
     >
       <BlurView intensity={70} style={styles.blurContainer}>
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.centeredView}
         >
           <View style={styles.modalView}>
@@ -172,27 +173,29 @@ export default function CompletionCodeInput({
               <Text style={styles.routeId}>Ruta #{routeId}</Text>
             </View>
 
-            <Animated.View 
+            <Animated.View
               style={[
                 styles.codeContainer,
-                { transform: [{ translateX: shakeAnimation }] }
+                { transform: [{ translateX: shakeAnimation }] },
               ]}
             >
               {code.map((digit, index) => (
                 <Animated.View
                   key={index}
-                  style={[
-                    { transform: [{ scale: inputScales[index] }] }
-                  ]}
+                  style={[{ transform: [{ scale: inputScales[index] }] }]}
                 >
                   <TextInput
-                    ref={(ref) => { inputRefs.current[index] = ref; }}
+                    ref={(ref) => {
+                      inputRefs.current[index] = ref;
+                    }}
                     style={[
                       styles.codeInput,
                       digit && styles.codeInputFilled,
-                      verificationStatus === 'loading' && styles.codeInputDisabled,
-                      verificationStatus === 'success' && styles.codeInputSuccess,
-                      verificationStatus === 'error' && styles.codeInputError
+                      verificationStatus === "loading" &&
+                        styles.codeInputDisabled,
+                      verificationStatus === "success" &&
+                        styles.codeInputSuccess,
+                      verificationStatus === "error" && styles.codeInputError,
                     ]}
                     value={digit}
                     onChangeText={(text) => handleCodeChange(text, index)}
@@ -202,32 +205,36 @@ export default function CompletionCodeInput({
                     keyboardType="number-pad"
                     maxLength={1}
                     selectionColor="white"
-                    editable={verificationStatus !== 'loading' && verificationStatus !== 'success'}
+                    editable={
+                      verificationStatus !== "loading" &&
+                      verificationStatus !== "success"
+                    }
                   />
                 </Animated.View>
               ))}
             </Animated.View>
 
-            <Animated.Text 
+            <Animated.Text
               style={[
                 styles.statusMessage,
-                verificationStatus === 'success' && styles.statusMessageSuccess,
-                verificationStatus === 'error' && styles.statusMessageError,
-                { opacity: statusOpacity }
+                verificationStatus === "success" && styles.statusMessageSuccess,
+                verificationStatus === "error" && styles.statusMessageError,
+                { opacity: statusOpacity },
               ]}
             >
               {statusMessage}
             </Animated.Text>
 
             <View style={styles.footer}>
-              <Pressable 
-                style={styles.cancelButton} 
+              <Pressable
+                style={styles.cancelButton}
                 onPress={onClose}
-                disabled={verificationStatus === 'loading' || verificationStatus === 'success'}
+                disabled={
+                  verificationStatus === "loading" ||
+                  verificationStatus === "success"
+                }
               >
-                <Text style={styles.cancelButtonText}>
-                  Cancelar
-                </Text>
+                <Text style={styles.cancelButtonText}>Cancelar</Text>
               </Pressable>
             </View>
           </View>
@@ -240,24 +247,24 @@ export default function CompletionCodeInput({
 const styles = StyleSheet.create({
   blurContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   centeredView: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
-    width: '100%',
+    width: "100%",
   },
   modalView: {
-    width: '100%',
-    backgroundColor: '#1e1e1e',
+    width: "100%",
+    backgroundColor: "#1e1e1e",
     borderRadius: 20,
     padding: 24,
-    alignItems: 'center',
-    shadowColor: '#000',
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -268,102 +275,102 @@ const styles = StyleSheet.create({
     maxWidth: 400,
   },
   header: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 24,
   },
   iconContainer: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#333',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#333",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 16,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: "bold",
+    color: "white",
     marginBottom: 12,
-    textAlign: 'center',
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 16,
-    color: '#999',
-    textAlign: 'center',
+    color: "#999",
+    textAlign: "center",
     marginBottom: 8,
   },
   routeId: {
     fontSize: 16,
-    color: 'white',
-    fontWeight: '500',
-    textAlign: 'center',
+    color: "white",
+    fontWeight: "500",
+    textAlign: "center",
   },
   codeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    width: "100%",
     paddingHorizontal: 16,
     marginBottom: 24,
   },
   codeInput: {
-    width: '14%',
+    width: "14%",
     minWidth: 40,
     maxWidth: 50,
     height: 56,
     borderWidth: 2,
-    borderColor: '#333',
+    borderColor: "#333",
     borderRadius: 12,
-    color: 'white',
+    color: "white",
     fontSize: 24,
-    textAlign: 'center',
-    backgroundColor: 'transparent',
-    fontWeight: '600',
-    marginHorizontal: '1%',
+    textAlign: "center",
+    backgroundColor: "transparent",
+    fontWeight: "600",
+    marginHorizontal: "1%",
   },
   codeInputFilled: {
-    borderColor: '#666',
-    backgroundColor: '#222',
+    borderColor: "#666",
+    backgroundColor: "#222",
   },
   codeInputDisabled: {
     opacity: 0.5,
   },
   codeInputSuccess: {
-    borderColor: '#22c55e',
-    backgroundColor: 'rgba(34, 197, 94, 0.2)',
+    borderColor: "#22c55e",
+    backgroundColor: "rgba(34, 197, 94, 0.2)",
   },
   codeInputError: {
-    borderColor: '#ef4444',
-    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    borderColor: "#ef4444",
+    backgroundColor: "rgba(239, 68, 68, 0.2)",
   },
   footer: {
-    width: '100%',
-    alignItems: 'center',
+    width: "100%",
+    alignItems: "center",
     marginTop: 16,
   },
   cancelButton: {
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
-    backgroundColor: '#333',
-    width: '100%',
-    alignItems: 'center',
+    backgroundColor: "#333",
+    width: "100%",
+    alignItems: "center",
   },
   cancelButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   statusMessage: {
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 16,
   },
   statusMessageSuccess: {
-    color: '#22c55e',
+    color: "#22c55e",
   },
   statusMessageError: {
-    color: '#ef4444',
+    color: "#ef4444",
   },
-}); 
+});

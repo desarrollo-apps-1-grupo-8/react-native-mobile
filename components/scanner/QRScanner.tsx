@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Modal, Pressable } from 'react-native';
-import { CameraView, useCameraPermissions } from 'expo-camera';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from "@expo/vector-icons";
+import { CameraView, useCameraPermissions } from "expo-camera";
+import { useEffect, useState } from "react";
+import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 
 interface QRScannerProps {
   visible: boolean;
@@ -9,7 +9,11 @@ interface QRScannerProps {
   onScan: (data: string) => void;
 }
 
-export default function QRScanner({ visible, onClose, onScan }: QRScannerProps) {
+export default function QRScanner({
+  visible,
+  onClose,
+  onScan,
+}: QRScannerProps) {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
 
@@ -35,7 +39,9 @@ export default function QRScanner({ visible, onClose, onScan }: QRScannerProps) 
     return (
       <Modal visible={visible} onRequestClose={onClose} animationType="slide">
         <View style={styles.container}>
-          <Text style={styles.text}>Necesitamos permisos de cámara para escanear códigos QR</Text>
+          <Text style={styles.text}>
+            Necesitamos permisos de cámara para escanear códigos QR
+          </Text>
           <Pressable style={styles.button} onPress={requestPermission}>
             <Text style={styles.buttonText}>Otorgar permisos</Text>
           </Pressable>
@@ -54,21 +60,31 @@ export default function QRScanner({ visible, onClose, onScan }: QRScannerProps) 
           style={styles.camera}
           onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
           barcodeScannerSettings={{
-            barcodeTypes: ["qr", "code128", "code39", "code93", "codabar", "ean13", "ean8", "upc_a", "upc_e"],
+            barcodeTypes: [
+              "qr",
+              "code128",
+              "code39",
+              "code93",
+              "codabar",
+              "ean13",
+              "ean8",
+              "upc_a",
+              "upc_e",
+            ],
           }}
         >
           <View style={styles.overlay}>
             <Pressable style={styles.closeIcon} onPress={onClose}>
               <Ionicons name="close" size={32} color="white" />
             </Pressable>
-            
+
             <View style={styles.scanArea}>
               <View style={[styles.corner, styles.topLeft]} />
               <View style={[styles.corner, styles.topRight]} />
               <View style={[styles.corner, styles.bottomLeft]} />
               <View style={[styles.corner, styles.bottomRight]} />
             </View>
-            
+
             <Text style={styles.instructionText}>
               Coloca el código QR dentro del marco
             </Text>
@@ -82,22 +98,22 @@ export default function QRScanner({ visible, onClose, onScan }: QRScannerProps) 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#000",
+    justifyContent: "center",
+    alignItems: "center",
   },
   camera: {
     flex: 1,
-    width: '100%',
+    width: "100%",
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   closeIcon: {
-    position: 'absolute',
+    position: "absolute",
     top: 50,
     right: 20,
     zIndex: 1,
@@ -105,13 +121,13 @@ const styles = StyleSheet.create({
   scanArea: {
     width: 250,
     height: 250,
-    position: 'relative',
+    position: "relative",
   },
   corner: {
-    position: 'absolute',
+    position: "absolute",
     width: 50,
     height: 50,
-    borderColor: 'white',
+    borderColor: "white",
     borderWidth: 3,
   },
   topLeft: {
@@ -139,39 +155,39 @@ const styles = StyleSheet.create({
     borderTopWidth: 0,
   },
   instructionText: {
-    color: '#9BA1A6',
+    color: "#9BA1A6",
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
     marginTop: 30,
-    textAlign: 'center',
+    textAlign: "center",
   },
   text: {
-    color: 'white',
+    color: "white",
     fontSize: 18,
-    fontWeight: '500',
-    textAlign: 'center',
+    fontWeight: "500",
+    textAlign: "center",
     marginBottom: 20,
     paddingHorizontal: 20,
   },
   button: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 20,
   },
   buttonText: {
-    color: 'black',
-    fontWeight: '600',
+    color: "black",
+    fontWeight: "600",
     fontSize: 18,
   },
   closeButton: {
     marginTop: 20,
   },
   closeButtonText: {
-    color: '#9BA1A6',
+    color: "#9BA1A6",
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
 });

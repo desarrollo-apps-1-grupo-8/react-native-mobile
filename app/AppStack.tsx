@@ -1,7 +1,7 @@
-import ProfileScreen from "@/components/profile/profile";
 import { useSession } from "@/context/SessionContext";
 import { HistoryScreen } from "@/screens/HistoryScreen";
 import { MyRoutesScreen } from "@/screens/MyRoutesScreen";
+import ProfileScreen from "@/screens/ProfileScreen";
 import { RoutesScreen } from "@/screens/RoutesScreen";
 import { RoleEnum } from "@/utils/roleEnum";
 import { Ionicons } from "@expo/vector-icons";
@@ -67,12 +67,14 @@ export default function AppStack() {
           }
 
           return (
-            <Ionicons 
-              name={iconName as any} 
-              size={iconSize} 
+            <Ionicons
+              name={iconName as any}
+              size={iconSize}
               color={color}
               style={{
-                textShadowColor: focused ? "rgba(236, 237, 238, 0.3)" : "transparent",
+                textShadowColor: focused
+                  ? "rgba(236, 237, 238, 0.3)"
+                  : "transparent",
                 textShadowOffset: { width: 0, height: 2 },
                 textShadowRadius: 4,
               }}
@@ -81,8 +83,8 @@ export default function AppStack() {
         },
       })}
     >
-      <Tab.Screen 
-        name="Shipments" 
+      <Tab.Screen
+        name="Shipments"
         component={RoutesScreen}
         options={{
           tabBarLabel: "Envios",
@@ -90,16 +92,16 @@ export default function AppStack() {
       />
       {user?.role === RoleEnum.REPARTIDOR && (
         <>
-          <Tab.Screen 
-            name="MyRoutes" 
+          <Tab.Screen
+            name="MyRoutes"
             component={MyRoutesScreen}
             options={{
               tabBarLabel: "Mis rutas",
               headerShown: false,
             }}
           />
-          <Tab.Screen 
-            name="History" 
+          <Tab.Screen
+            name="History"
             component={HistoryScreen}
             options={{
               tabBarLabel: "Historial",
@@ -107,8 +109,8 @@ export default function AppStack() {
           />
         </>
       )}
-      <Tab.Screen 
-        name="Profile" 
+      <Tab.Screen
+        name="Profile"
         component={ProfileScreen}
         options={{
           tabBarLabel: "Perfil",

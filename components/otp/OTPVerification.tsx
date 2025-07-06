@@ -1,26 +1,39 @@
-import api from '@/services/api';
-import { Feather } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
-import { useEffect, useRef, useState } from 'react';
-import { Animated, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import api from "@/services/api";
+import { Feather } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
+import { useEffect, useRef, useState } from "react";
+import {
+  Animated,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 interface OTPVerificationProps {
   email: string;
   isPasswordRecovery?: boolean;
 }
 
-type VerificationStatus = 'idle' | 'success' | 'error';
+type VerificationStatus = "idle" | "success" | "error";
 
-export default function OTPVerification({ email, isPasswordRecovery = false}: OTPVerificationProps) {
+export default function OTPVerification({
+  email,
+  isPasswordRecovery = false,
+}: OTPVerificationProps) {
   const navigation = useNavigation<any>();
-  const [code, setCode] = useState(['', '', '', '', '', '']);
+  const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [resendDisabled, setResendDisabled] = useState(false);
   const [countdown, setCountdown] = useState(0);
-  const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>('idle');
-  const [statusMessage, setStatusMessage] = useState('');
-  
+  const [verificationStatus, setVerificationStatus] =
+    useState<VerificationStatus>("idle");
+  const [statusMessage, setStatusMessage] = useState("");
+
   const inputRefs = useRef<Array<TextInput | null>>([]);
   const shakeAnimation = useRef(new Animated.Value(0)).current;
   const statusOpacity = useRef(new Animated.Value(0)).current;
@@ -28,10 +41,10 @@ export default function OTPVerification({ email, isPasswordRecovery = false}: OT
 
   useEffect(() => {
     const checkCooldown = async () => {
-      const last = await AsyncStorage.getItem('otp_last_resend');
+      const last = await AsyncStorage.getItem("otp_last_resend");
       if (last) {
         const diff = 60 - Math.floor((Date.now() - Number(last)) / 1000);
-        if (diff > 0) { 
+        if (diff > 0) {
           setResendDisabled(true);
           setCountdown(diff);
           return true;
@@ -56,7 +69,7 @@ export default function OTPVerification({ email, isPasswordRecovery = false}: OT
       return () => clearTimeout(timer);
     } else if (resendDisabled && countdown === 0) {
       setResendDisabled(false);
-      AsyncStorage.removeItem('otp_last_resend');
+      AsyncStorage.removeItem("otp_last_resend");
     }
   }, [resendDisabled, countdown]);
 
@@ -81,7 +94,7 @@ export default function OTPVerification({ email, isPasswordRecovery = false}: OT
         toValue: 0,
         duration: 100,
         useNativeDriver: true,
-      })
+      }),
     ]).start();
   };
 
@@ -103,8 +116,8 @@ export default function OTPVerification({ email, isPasswordRecovery = false}: OT
   };
 
   const resetStatus = () => {
-    setVerificationStatus('idle');
-    setStatusMessage('');
+    setVerificationStatus("idle");
+    setStatusMessage("");
     animateStatus(false);
   };
 
@@ -121,7 +134,7 @@ export default function OTPVerification({ email, isPasswordRecovery = false}: OT
     }
 
     if (text && index === 5) {
-      const completeCode = [...newCode].join('');
+      const completeCode = [...newCode].join("");
       if (completeCode.length === 6) {
         handleVerify(completeCode);
       }
@@ -129,10 +142,10 @@ export default function OTPVerification({ email, isPasswordRecovery = false}: OT
   };
 
   const handleKeyPress = (e: any, index: number) => {
-    if (e.nativeEvent.key === 'Backspace' && !code[index] && index > 0) {
+    if (e.nativeEvent.key === "Backspace" && !code[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
       const newCode = [...code];
-      newCode[index-1] = '';
+      newCode[index - 1] = "";
       setCode(newCode);
     }
   };
@@ -141,27 +154,34 @@ export default function OTPVerification({ email, isPasswordRecovery = false}: OT
     try {
       setLoading(true);
       resetStatus();
-      
+
       // Use different endpoint based on context
-      const endpoint = isPasswordRecovery ? '/verify-reset-code' : '/verify-code';
-      const response = await api.post(endpoint, { 
-        email, 
+      const endpoint = isPasswordRecovery
+        ? "/verify-reset-code"
+        : "/verify-code";
+      const response = await api.post(endpoint, {
+        email,
         verificationCode: verificationCode,
-        recoverPassword: isPasswordRecovery
+        recoverPassword: isPasswordRecovery,
       });
 
       if (response.data.success) {
-        setVerificationStatus('success');
-        setStatusMessage('Tu cuenta ha sido verificada correctamente');
+        setVerificationStatus("success");
+        setStatusMessage("Tu cuenta ha sido verificada correctamente");
         animateStatus(true);
         setTimeout(() => {
-          const targetScreen = isPasswordRecovery ? 'ResetPassword' : 'Login';
+          const targetScreen = isPasswordRecovery ? "ResetPassword" : "Login";
           if (isPasswordRecovery) {
             const resetToken = response.data.resetToken;
-            navigation.navigate(targetScreen as never, { email, resetToken } as never);
+            navigation.navigate(
+              targetScreen as never,
+              { email, resetToken } as never
+            );
             navigation.reset({
               index: 0,
-              routes: [{ name: targetScreen as never, params: { email, resetToken } }],
+              routes: [
+                { name: targetScreen as never, params: { email, resetToken } },
+              ],
             });
           } else {
             navigation.navigate(targetScreen as never);
@@ -172,19 +192,19 @@ export default function OTPVerification({ email, isPasswordRecovery = false}: OT
           }
         }, 1500);
       } else {
-        setVerificationStatus('error');
-        setStatusMessage('Código inválido');
+        setVerificationStatus("error");
+        setStatusMessage("Código inválido");
         animateStatus(true);
         animateError();
-        setCode(['', '', '', '', '', '']);
+        setCode(["", "", "", "", "", ""]);
         inputRefs.current[0]?.focus();
       }
     } catch (error: any) {
-      setVerificationStatus('error');
-      setStatusMessage(error.message || 'No se pudo verificar el código');
+      setVerificationStatus("error");
+      setStatusMessage(error.message || "No se pudo verificar el código");
       animateStatus(true);
       animateError();
-      setCode(['', '', '', '', '', '']);
+      setCode(["", "", "", "", "", ""]);
       inputRefs.current[0]?.focus();
     } finally {
       setLoading(false);
@@ -193,36 +213,41 @@ export default function OTPVerification({ email, isPasswordRecovery = false}: OT
 
   const handleSendCode = async (isResend = false) => {
     if (resendDisabled && isResend) return;
-    
+
     try {
       if (isResend) {
         setResendDisabled(true);
         setCountdown(60);
         const now = Date.now();
-        await AsyncStorage.setItem('otp_last_resend', now.toString());
+        await AsyncStorage.setItem("otp_last_resend", now.toString());
       }
       // Use different endpoint based on whether it's password recovery or registration
-      const endpoint = isPasswordRecovery ? '/forgot-password' : '/send-verification-code';
-      const response = await api.post(endpoint, { email, recoverPassword: isPasswordRecovery });
+      const endpoint = isPasswordRecovery
+        ? "/forgot-password"
+        : "/send-verification-code";
+      const response = await api.post(endpoint, {
+        email,
+        recoverPassword: isPasswordRecovery,
+      });
 
       if (response.data.success) {
         if (isResend) {
-          setStatusMessage('Se ha enviado un nuevo código a tu correo');
-          setVerificationStatus('idle');
-          setCode(['', '', '', '', '', '']);
+          setStatusMessage("Se ha enviado un nuevo código a tu correo");
+          setVerificationStatus("idle");
+          setCode(["", "", "", "", "", ""]);
           inputRefs.current[0]?.focus();
         }
       } else {
-        throw new Error('No se pudo enviar el código');
+        throw new Error("No se pudo enviar el código");
       }
     } catch (error: any) {
-      setStatusMessage(error.message || 'No se pudo enviar el código');
-      setVerificationStatus('error');
+      setStatusMessage(error.message || "No se pudo enviar el código");
+      setVerificationStatus("error");
       animateStatus(true);
       if (isResend) {
         setResendDisabled(false);
         setCountdown(0);
-        await AsyncStorage.removeItem('otp_last_resend');
+        await AsyncStorage.removeItem("otp_last_resend");
       }
     }
   };
@@ -231,7 +256,7 @@ export default function OTPVerification({ email, isPasswordRecovery = false}: OT
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
     >
       <View style={styles.content}>
@@ -246,27 +271,27 @@ export default function OTPVerification({ email, isPasswordRecovery = false}: OT
           <Text style={styles.email}>{email}</Text>
         </View>
 
-        <Animated.View 
+        <Animated.View
           style={[
             styles.codeContainer,
-            { transform: [{ translateX: shakeAnimation }] }
+            { transform: [{ translateX: shakeAnimation }] },
           ]}
         >
           {code.map((digit, index) => (
             <Animated.View
               key={index}
-              style={[
-                { transform: [{ scale: inputScales[index] }] }
-              ]}
+              style={[{ transform: [{ scale: inputScales[index] }] }]}
             >
               <TextInput
-                ref={(ref) => { inputRefs.current[index] = ref; }}
+                ref={(ref) => {
+                  inputRefs.current[index] = ref;
+                }}
                 style={[
                   styles.codeInput,
                   digit && styles.codeInputFilled,
                   loading && styles.codeInputDisabled,
-                  verificationStatus === 'success' && styles.codeInputSuccess,
-                  verificationStatus === 'error' && styles.codeInputError
+                  verificationStatus === "success" && styles.codeInputSuccess,
+                  verificationStatus === "error" && styles.codeInputError,
                 ]}
                 value={digit}
                 onChangeText={(text) => handleCodeChange(text, index)}
@@ -276,33 +301,43 @@ export default function OTPVerification({ email, isPasswordRecovery = false}: OT
                 keyboardType="number-pad"
                 maxLength={1}
                 selectionColor="white"
-                editable={!loading && verificationStatus !== 'success'}
+                editable={!loading && verificationStatus !== "success"}
               />
             </Animated.View>
           ))}
         </Animated.View>
 
-        <Animated.Text 
+        <Animated.Text
           style={[
             styles.statusMessage,
-            verificationStatus === 'success' && styles.statusMessageSuccess,
-            verificationStatus === 'error' && styles.statusMessageError,
-            { opacity: statusOpacity }
+            verificationStatus === "success" && styles.statusMessageSuccess,
+            verificationStatus === "error" && styles.statusMessageError,
+            { opacity: statusOpacity },
           ]}
         >
           {statusMessage}
         </Animated.Text>
 
         <View style={styles.footer}>
-          <Pressable 
-            style={[styles.resendButton, resendDisabled && styles.resendButtonDisabled]} 
+          <Pressable
+            style={[
+              styles.resendButton,
+              resendDisabled && styles.resendButtonDisabled,
+            ]}
             onPress={handleResendCode}
-            disabled={resendDisabled || loading || verificationStatus === 'success'}
+            disabled={
+              resendDisabled || loading || verificationStatus === "success"
+            }
           >
-            <Text style={[styles.resendButtonText, resendDisabled && styles.resendButtonTextDisabled]}>
-              {resendDisabled 
-                ? `Reenviar código en ${countdown}s` 
-                : 'Reenviar código'}
+            <Text
+              style={[
+                styles.resendButtonText,
+                resendDisabled && styles.resendButtonTextDisabled,
+              ]}
+            >
+              {resendDisabled
+                ? `Reenviar código en ${countdown}s`
+                : "Reenviar código"}
             </Text>
           </Pressable>
 
@@ -318,50 +353,50 @@ export default function OTPVerification({ email, isPasswordRecovery = false}: OT
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: "#000",
   },
   content: {
     flex: 1,
     paddingHorizontal: 24,
     paddingTop: 60,
-    alignItems: 'center',
+    alignItems: "center",
   },
   header: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 40,
   },
   iconContainer: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#333',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#333",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 24,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: "bold",
+    color: "white",
     marginBottom: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 16,
-    color: '#999',
-    textAlign: 'center',
+    color: "#999",
+    textAlign: "center",
     marginBottom: 8,
   },
   email: {
     fontSize: 16,
-    color: 'white',
-    fontWeight: '500',
-    textAlign: 'center',
+    color: "white",
+    fontWeight: "500",
+    textAlign: "center",
   },
   codeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
     paddingHorizontal: 20,
     marginBottom: 40,
   },
@@ -369,66 +404,66 @@ const styles = StyleSheet.create({
     width: 45,
     height: 56,
     borderWidth: 2,
-    borderColor: '#333',
+    borderColor: "#333",
     borderRadius: 12,
-    color: 'white',
+    color: "white",
     fontSize: 24,
-    textAlign: 'center',
-    backgroundColor: 'transparent',
-    fontWeight: '600',
+    textAlign: "center",
+    backgroundColor: "transparent",
+    fontWeight: "600",
   },
   codeInputFilled: {
-    borderColor: '#666',
-    backgroundColor: '#222',
+    borderColor: "#666",
+    backgroundColor: "#222",
   },
   codeInputDisabled: {
     opacity: 0.5,
   },
   codeInputSuccess: {
-    borderColor: '#22c55e',
-    backgroundColor: 'rgba(34, 197, 94, 0.2)',
+    borderColor: "#22c55e",
+    backgroundColor: "rgba(34, 197, 94, 0.2)",
   },
   codeInputError: {
-    borderColor: '#ef4444',
-    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    borderColor: "#ef4444",
+    backgroundColor: "rgba(239, 68, 68, 0.2)",
   },
   footer: {
-    width: '100%',
-    alignItems: 'center',
+    width: "100%",
+    alignItems: "center",
   },
   resendButton: {
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
-    backgroundColor: '#222',
+    backgroundColor: "#222",
     marginBottom: 16,
   },
   resendButtonDisabled: {
     opacity: 0.5,
   },
   resendButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   resendButtonTextDisabled: {
-    color: '#999',
+    color: "#999",
   },
   helpText: {
     fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
   },
   statusMessage: {
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 24,
     marginTop: -24,
   },
   statusMessageSuccess: {
-    color: '#22c55e',
+    color: "#22c55e",
   },
   statusMessageError: {
-    color: '#ef4444',
+    color: "#ef4444",
   },
 });

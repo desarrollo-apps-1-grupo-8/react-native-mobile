@@ -1,9 +1,9 @@
+import { DeliveryRouteResponseWithUserInfo } from "@/types/route";
+import { openLocationInMaps } from "@/utils/mapUtils";
+import { RoleEnum } from "@/utils/roleEnum";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { DeliveryRouteResponseWithUserInfo } from "../types/route";
-import { openLocationInMaps } from "../utils/mapUtils";
-import { RoleEnum } from "../utils/roleEnum";
 
 interface RouteCardProps {
   route: DeliveryRouteResponseWithUserInfo;
@@ -13,15 +13,15 @@ interface RouteCardProps {
   showCodeButton?: boolean;
 }
 
-export const RouteCard: React.FC<RouteCardProps> = ({ 
-  route, 
-  role, 
+export const RouteCard: React.FC<RouteCardProps> = ({
+  route,
+  role,
   onPress,
   onViewCode,
-  showCodeButton = false
+  showCodeButton = false,
 }) => {
   const status = route.status;
-    
+
   const getStatusStyle = (status: string) => {
     switch (status) {
       case "AVAILABLE":
@@ -78,7 +78,12 @@ export const RouteCard: React.FC<RouteCardProps> = ({
         style={styles.actionButton}
         onPress={() => onPress(route.id, getNextStatus(route.status))}
       >
-        <Ionicons name="checkmark-circle-outline" size={18} color="#fff" style={styles.actionIcon} />
+        <Ionicons
+          name="checkmark-circle-outline"
+          size={18}
+          color="#fff"
+          style={styles.actionIcon}
+        />
         <Text style={styles.actionButtonText}>
           {getActionButtonText(route.status)}
         </Text>
@@ -91,16 +96,21 @@ export const RouteCard: React.FC<RouteCardProps> = ({
   };
 
   const renderMapButton = () => {
-    if (role !== RoleEnum.REPARTIDOR || (route.status !== "IN_PROGRESS" && route.status !== "COMPLETED")) {
+    if (
+      role !== RoleEnum.REPARTIDOR ||
+      (route.status !== "IN_PROGRESS" && route.status !== "COMPLETED")
+    ) {
       return null;
     }
 
     return (
-      <Pressable
-        style={styles.mapButton}
-        onPress={handleOpenMaps}
-      >
-        <Ionicons name="map-outline" size={18} color="#fff" style={styles.mapIcon} />
+      <Pressable style={styles.mapButton} onPress={handleOpenMaps}>
+        <Ionicons
+          name="map-outline"
+          size={18}
+          color="#fff"
+          style={styles.mapIcon}
+        />
         <Text style={styles.mapButtonText}>Ver mapa</Text>
       </Pressable>
     );
@@ -112,11 +122,13 @@ export const RouteCard: React.FC<RouteCardProps> = ({
     }
 
     return (
-      <Pressable
-        style={styles.viewCodeButton}
-        onPress={onViewCode}
-      >
-        <Ionicons name="key-outline" size={18} color="#fff" style={styles.viewCodeIcon} />
+      <Pressable style={styles.viewCodeButton} onPress={onViewCode}>
+        <Ionicons
+          name="key-outline"
+          size={18}
+          color="#fff"
+          style={styles.viewCodeIcon}
+        />
         <Text style={styles.viewCodeText}>Ver código</Text>
       </Pressable>
     );
@@ -128,12 +140,7 @@ export const RouteCard: React.FC<RouteCardProps> = ({
     <View style={styles.card}>
       <View style={styles.header}>
         <Text style={styles.title}>Ruta #{route.id}</Text>
-        <View
-          style={[
-            styles.statusBadge,
-            { backgroundColor: statusStyle.bg },
-          ]}
-        >
+        <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}>
           <Text style={styles.statusText}>{getStatusText(route.status)}</Text>
         </View>
       </View>
@@ -292,4 +299,4 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#ffffff",
   },
-}); 
+});

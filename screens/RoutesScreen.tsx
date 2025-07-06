@@ -1,3 +1,4 @@
+import { RouteCard } from "@/components/shipments/RouteCard";
 import api from "@/services/api";
 import { registerForPushNotificationsAsync } from "@/utils/notificationSetup";
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -16,7 +17,6 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { RouteCard } from "../components/RouteCard";
 import QRScanner from "../components/scanner/QRScanner";
 import CompletionCodeModal from "../components/shipments/CompletionCodeModal";
 import PackageInfoModal from "../components/shipments/PackageInfoModal";

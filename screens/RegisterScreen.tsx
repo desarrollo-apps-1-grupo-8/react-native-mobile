@@ -14,7 +14,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import OTPVerification from "../otp/OTPVerification";
+import OTPVerification from "../components/otp/OTPVerification";
 
 type ErrorType = {
   firstName?: string;
