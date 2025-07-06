@@ -503,7 +503,6 @@ export default function LoginScreen() {
         </Pressable>
       </View>
 
-      {/* Animación de éxito */}
       {showSuccessAnimation && (
         <Modal transparent animationType="fade">
           <View
@@ -515,7 +514,7 @@ export default function LoginScreen() {
             }}
           >
             <LottieView
-              source={require("../../assets/animations/success.json")}
+              source={require("@/assets/animations/success.json")}
               autoPlay
               loop={false}
               style={{ width: 200, height: 200 }}
