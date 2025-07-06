@@ -38,7 +38,7 @@ public ResponseEntity<String> sendTest(@RequestBody Map<String, String> body) {
         firebaseMessagingService.sendNotification(
             "¡Nueva ruta de prueba!",
             "Este es un mensaje de prueba para el usuario " + userId,
-            token
+            token, "Shipments"
         );
         return ResponseEntity.ok("Notificación enviada");
     } catch (Exception e) {

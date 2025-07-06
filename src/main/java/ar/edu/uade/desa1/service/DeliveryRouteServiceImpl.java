@@ -65,7 +65,7 @@ public class DeliveryRouteServiceImpl implements DeliveryRouteService {
                         firebaseMessagingService.sendNotification(
                                 "Nueva ruta disponible",
                                 "Hay una entrega esperando ser tomada",
-                                token
+                                token, "Shipments"
                         );
                     } catch (Exception e) {
                         System.err.println("Error enviando notificación FCM: " + e.getMessage());
@@ -188,7 +188,7 @@ public class DeliveryRouteServiceImpl implements DeliveryRouteService {
                     firebaseMessagingService.sendNotification(
                             "¡Ruta actualizada!",
                             "Se modificó el origen o destino de tu entrega.",
-                            token
+                            token, "MyRoutes"
                     );
                 } catch (Exception e) {
                     System.err.println("Error enviando notificación de cambio de ruta: " + e.getMessage());

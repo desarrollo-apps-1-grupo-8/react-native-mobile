@@ -11,7 +11,7 @@ public class FirebaseMessagingService {
 
     private final OkHttpClient client = new OkHttpClient();
 
-    public void sendNotification(String title, String message, String expoPushToken) throws IOException {
+        public void sendNotification(String title, String message, String expoPushToken, String target) throws IOException {
         if (!expoPushToken.startsWith("ExponentPushToken")) {
             throw new IllegalArgumentException(" Token inválido: no es un ExpoPushToken");
         }
@@ -22,6 +22,12 @@ public class FirebaseMessagingService {
         json.put("to", expoPushToken);
         json.put("title", title);
         json.put("body", message);
+
+        //Se envia un json llamado data para que el front sepa a donde redireccionar, el parametro target va a cambiar depende a donde se quiera redireccionar.
+        JSONObject data = new JSONObject();
+        data.put("target", target);
+        json.put("data", data);
+
 
         RequestBody body = RequestBody.create(json.toString(), JSON);
         Request request = new Request.Builder()
