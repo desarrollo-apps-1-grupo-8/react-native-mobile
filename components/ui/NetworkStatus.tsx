@@ -207,10 +207,10 @@ const styles = StyleSheet.create({
     top: 50,
     left: 20,
     right: 20,
-    zIndex: 1000,
+    zIndex: 99999,
     borderRadius: 12,
     borderWidth: 1,
-    elevation: 8,
+    elevation: 999,
     shadowColor: '#000000',
     shadowOffset: {
       width: 0,

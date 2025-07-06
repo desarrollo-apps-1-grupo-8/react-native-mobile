@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { openLocationInMaps } from '../../utils/mapUtils';
 
 interface PackageInfo {
   id: string;
@@ -31,22 +32,7 @@ export default function PackageInfoModal({
 
   const handleOpenMaps = () => {
     if (packageInfo.route && packageInfo.route.destination) {
-      const location = packageInfo.route.destination;
-      const url = Platform.select({
-        ios: `maps:0,0?q=${encodeURIComponent(location)}`,
-        android: `geo:0,0?q=${encodeURIComponent(location)}`
-      });
-
-      if (url) {
-        Linking.canOpenURL(url)
-          .then((supported) => {
-            const mapUrl = supported
-              ? url
-              : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
-            return Linking.openURL(mapUrl);
-          })
-          .catch((err) => console.error("Error al abrir Google Maps:", err));
-      }
+      openLocationInMaps(packageInfo.route.destination);
     }
   };
 
