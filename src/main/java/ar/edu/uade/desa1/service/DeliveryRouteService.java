@@ -2,6 +2,7 @@ package ar.edu.uade.desa1.service;
 
 import ar.edu.uade.desa1.domain.entity.DeliveryRoute;
 import ar.edu.uade.desa1.domain.request.CreateRouteRequest;
+import ar.edu.uade.desa1.domain.request.UpdateRouteStatusRequest;
 import ar.edu.uade.desa1.domain.response.DeliveryRouteResponse;
 import org.springframework.security.core.Authentication;
 
@@ -12,7 +13,7 @@ public interface DeliveryRouteService {
     List<DeliveryRouteResponse> getAllRoutes();
     List<DeliveryRouteResponse> getAllRoutesByUserId(Long userId);
     DeliveryRoute getRouteById(Long id);
-    DeliveryRouteResponse updateRouteStatus(Long routeId, String status, Long deliveryUserId);
+    DeliveryRouteResponse updateRouteStatus(UpdateRouteStatusRequest request);
     List<DeliveryRouteResponse> getCompletedRoutesByUser(Long userId);
     List<DeliveryRouteResponse> getAllRoutesByDeliveryUserId(Long deliveryUserId);
 }

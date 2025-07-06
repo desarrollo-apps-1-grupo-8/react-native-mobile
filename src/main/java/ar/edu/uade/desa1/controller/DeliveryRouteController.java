@@ -27,26 +27,6 @@ public class DeliveryRouteController {
     @PostMapping
     public ResponseEntity<DeliveryRoute> createRoute(@RequestBody CreateRouteRequest request) {
     DeliveryRoute createdRoute = deliveryRouteService.createRoute(request);
-
-    if (request.getDeliveryUserId() != null) {
-        String pushToken = tokenStorageService.getToken(request.getDeliveryUserId().toString());
-
-        if (pushToken != null) {
-            try {
-                firebaseMessagingService.sendNotification(
-                    "¡Nueva ruta asignada!",
-                    "Tenés una nueva entrega pendiente. Revisá la app.",
-                    pushToken
-                );
-                System.out.println("Push enviada al repartidor con ID: " + request.getDeliveryUserId());
-            } catch (Exception e) {
-                System.out.println("Error al enviar push: " + e.getMessage());
-            }
-        } else {
-            System.out.println("Repartidor sin token registrado para push.");
-        }
-    }
-
     return ResponseEntity.ok(createdRoute);
 }
 
@@ -73,12 +53,10 @@ public class DeliveryRouteController {
 
     @PostMapping("/update-status")
     public ResponseEntity<DeliveryRouteResponse> updateRouteStatus(@RequestBody UpdateRouteStatusRequest request) {
-        return ResponseEntity.ok(deliveryRouteService.updateRouteStatus(
-            request.getDeliveryRouteId(), 
-            request.getStatus(),
-            request.getDeliveryUserId()
-        ));
-    }
+    return ResponseEntity.ok(deliveryRouteService.updateRouteStatus(request));
+}
+
+
 
     @GetMapping("/history/{userId}")
     public ResponseEntity<List<DeliveryRouteResponse>> getCompletedRoutes(@PathVariable("userId") Long userId) {

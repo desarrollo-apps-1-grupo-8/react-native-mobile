@@ -4,6 +4,7 @@ import ar.edu.uade.desa1.domain.entity.DeliveryRoute;
 import ar.edu.uade.desa1.domain.entity.User;
 import ar.edu.uade.desa1.domain.enums.RouteStatus;
 import ar.edu.uade.desa1.domain.request.CreateRouteRequest;
+import ar.edu.uade.desa1.domain.request.UpdateRouteStatusRequest;
 import ar.edu.uade.desa1.domain.response.DeliveryRouteResponse;
 import ar.edu.uade.desa1.exception.NotFoundException;
 import ar.edu.uade.desa1.repository.DeliveryRouteRepository;
@@ -32,63 +33,74 @@ public class DeliveryRouteServiceImpl implements DeliveryRouteService {
 
     @Override
     @Transactional
+
     public DeliveryRoute createRoute(CreateRouteRequest request) {
 
-    User user = userRepository.findById(request.getUserId())
-            .orElseThrow(() -> new NotFoundException("User not found for id: " + request.getUserId()));
+        System.out.println("➡️ Iniciando createRoute para userId: " + request.getUserId());
+        System.out.println("🧾 Status recibido desde la request: " + request.getStatus());
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new NotFoundException("User not found for id: " + request.getUserId()));
 
-    try {
-        DeliveryRoute route = DeliveryRoute.builder()
-                .packageInfo(request.getPackageInfo())
-                .origin(request.getOrigin())
-                .destination(request.getDestination())
-                .status(request.getStatus())
-                .user(user)
-                .createdAt(LocalDateTime.now())
-                .build();
+        try {
+            DeliveryRoute route = DeliveryRoute.builder()
+                    .packageInfo(request.getPackageInfo())
+                    .origin(request.getOrigin())
+                    .destination(request.getDestination())
+                    .status(request.getStatus())
+                    .user(user)
+                    .createdAt(LocalDateTime.now())
+                    .build();
 
-        DeliveryRoute savedRoute = deliveryRouteRepository.save(route);
+            DeliveryRoute savedRoute = deliveryRouteRepository.save(route);
 
-        //Enviar notificación al repartidor
-        String token = tokenStorageService.getToken(user.getId().toString());
-        if (token != null) {
+            System.out.println("🧪 Valor de status en la ruta: " + route.getStatus());
+            // Notificar si la ruta está disponible
+            if (route.getStatus() == RouteStatus.AVAILABLE) {
+                 System.out.println("🔔 Ruta en estado AVAILABLE, intentando obtener token...");
+
+                String token = tokenStorageService.getAnyAvailableDeliveryToken();
+                  System.out.println("🔎 Token obtenido: " + token);
+                if (token != null) {
+                    try {
+                        firebaseMessagingService.sendNotification(
+                                "Nueva ruta disponible",
+                                "Hay una entrega esperando ser tomada",
+                                token
+                        );
+                    } catch (Exception e) {
+                        System.err.println("Error enviando notificación FCM: " + e.getMessage());
+                    }
+                }
+            }
+
+            return savedRoute;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error creating route: " + e.getMessage());
+        }
+    }
+
+
+
+        @Override
+        public List<DeliveryRouteResponse> getAllRoutes() {
             try {
-                firebaseMessagingService.sendNotification(
-                        "Nueva ruta disponible",
-                        "Se te ha asignado una nueva entrega",
-                        token
-                );
+                var routes = deliveryRouteRepository.findAll();
+
+                return routes.stream().map(route -> DeliveryRouteResponse.builder()
+                        .id(route.getId())
+                        .userInfo(route.getUser().getFirstName() + " " + route.getUser().getLastName())
+                        .packageInfo(route.getPackageInfo())
+                        .origin(route.getOrigin())
+                        .destination(route.getDestination())
+                        .createdAt(route.getCreatedAt())
+                        .updatedAt(route.getUpdatedAt())
+                        .status(route.getStatus())
+                        .build()).toList();
             } catch (Exception e) {
-                System.err.println("⚠️ Error enviando notificación FCM: " + e.getMessage());
+                throw new RuntimeException("Error getting all routes: " + e.getMessage());
             }
         }
-
-        return savedRoute;
-
-    } catch (Exception e) {
-        throw new RuntimeException("Error creating route: " + e.getMessage());
-    }
-}
-
-    @Override
-    public List<DeliveryRouteResponse> getAllRoutes() {
-        try {
-            var routes = deliveryRouteRepository.findAll();
-
-            return routes.stream().map(route -> DeliveryRouteResponse.builder()
-                    .id(route.getId())
-                    .userInfo(route.getUser().getFirstName() + " " + route.getUser().getLastName())
-                    .packageInfo(route.getPackageInfo())
-                    .origin(route.getOrigin())
-                    .destination(route.getDestination())
-                    .createdAt(route.getCreatedAt())
-                    .updatedAt(route.getUpdatedAt())
-                    .status(route.getStatus())
-                    .build()).toList();
-        } catch (Exception e) {
-            throw new RuntimeException("Error getting all routes: " + e.getMessage());
-        }
-    }
 
     @Override
     public List<DeliveryRouteResponse> getAllRoutesByUserId(Long userId) {
@@ -128,44 +140,84 @@ public class DeliveryRouteServiceImpl implements DeliveryRouteService {
     }
     @Override
     @Transactional
-    public DeliveryRouteResponse updateRouteStatus(Long routeId, String status, Long deliveryUserId) {
-        try {
-            User deliveryUser = userRepository.findById(deliveryUserId)
-                    .orElseThrow(() -> new NotFoundException("Delivery user not found for id: " + deliveryUserId));
+    public DeliveryRouteResponse updateRouteStatus(UpdateRouteStatusRequest request){
+    try {
+        User deliveryUser = userRepository.findById(request.getDeliveryUserId())
+                .orElseThrow(() -> new NotFoundException("Delivery user not found for id: " + request.getDeliveryUserId()));
 
-            DeliveryRoute route = deliveryRouteRepository.findById(routeId)
-                    .orElseThrow(() -> new NotFoundException("Route with id " + routeId + " not found"));
+        DeliveryRoute route = deliveryRouteRepository.findById(request.getDeliveryRouteId())
+                .orElseThrow(() -> new NotFoundException("Route with id " + request.getDeliveryRouteId() + " not found"));
+        // Guardar los valores actuales de origen y destino
+        String oldOrigin = route.getOrigin();
+        String oldDestination = route.getDestination();
 
-            if (route.getDeliveryUser() != null && !route.getDeliveryUser().getId().equals(deliveryUserId)) {
-                throw new RuntimeException("Only the assigned delivery user can change the route status");
-            }
-
-            if (RouteStatus.IN_PROGRESS == RouteStatus.valueOf(status)) {
-                route.setDeliveryUser(deliveryUser);
-            }
-
-            route.setStatus(RouteStatus.valueOf(status));
-            route.setUpdatedAt(LocalDateTime.now());
-            DeliveryRoute savedRoute = deliveryRouteRepository.save(route);
-
-            return DeliveryRouteResponse.builder()
-                    .id(savedRoute.getId())
-                    .packageInfo(savedRoute.getPackageInfo())
-                    .origin(savedRoute.getOrigin())
-                    .destination(savedRoute.getDestination())
-                    .status(savedRoute.getStatus())
-                    .userInfo(savedRoute.getUser().getFirstName() + " " + savedRoute.getUser().getLastName())
-                    .deliveryUserInfo(savedRoute.getDeliveryUser() != null ? savedRoute.getDeliveryUser().getFirstName() + " " + savedRoute.getDeliveryUser().getLastName(): null)
-                    .createdAt(savedRoute.getCreatedAt())
-                    .updatedAt(savedRoute.getUpdatedAt())
-                    .build();
-
-        } catch (NotFoundException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException("Error updating route status: " + e.getMessage());
+        // Si vienen valores nuevos en la request, actualizarlos
+        if (request.getOrigin() != null) {
+            route.setOrigin(request.getOrigin());
         }
-    }
+
+        if (request.getDestination() != null) {
+            route.setDestination(request.getDestination());
+        }
+
+
+        if (route.getDeliveryUser() != null && !route.getDeliveryUser().getId().equals(request.getDeliveryUserId())) {
+            throw new RuntimeException("Only the assigned delivery user can change the route status");
+        }
+
+        // Si la ruta pasa a "IN_PROGRESS", asignamos al repartidor
+        if (RouteStatus.IN_PROGRESS == RouteStatus.valueOf(request.getStatus())) {
+            route.setDeliveryUser(deliveryUser);
+        }
+
+        route.setStatus(RouteStatus.valueOf(request.getStatus()));
+        route.setUpdatedAt(LocalDateTime.now());
+        DeliveryRoute savedRoute = deliveryRouteRepository.save(route);
+
+        // Comparar cambios
+        boolean originChanged = oldOrigin != null && !oldOrigin.equals(savedRoute.getOrigin());
+        boolean destinationChanged = oldDestination != null && !oldDestination.equals(savedRoute.getDestination());
+
+        if (savedRoute.getStatus() == RouteStatus.IN_PROGRESS &&
+            savedRoute.getDeliveryUser() != null &&
+            (originChanged || destinationChanged)) {
+
+            String token = tokenStorageService.getToken(savedRoute.getDeliveryUser().getId().toString());
+            if (token != null) {
+                try {
+                    firebaseMessagingService.sendNotification(
+                            "¡Ruta actualizada!",
+                            "Se modificó el origen o destino de tu entrega.",
+                            token
+                    );
+                } catch (Exception e) {
+                    System.err.println("Error enviando notificación de cambio de ruta: " + e.getMessage());
+                }
+            } else {
+                System.out.println("Repartidor sin token registrado.");
+            }
+        }
+
+        return DeliveryRouteResponse.builder()
+                .id(savedRoute.getId())
+                .packageInfo(savedRoute.getPackageInfo())
+                .origin(savedRoute.getOrigin())
+                .destination(savedRoute.getDestination())
+                .status(savedRoute.getStatus())
+                .userInfo(savedRoute.getUser().getFirstName() + " " + savedRoute.getUser().getLastName())
+                .deliveryUserInfo(savedRoute.getDeliveryUser() != null ? savedRoute.getDeliveryUser().getFirstName() + " " + savedRoute.getDeliveryUser().getLastName() : null)
+                .createdAt(savedRoute.getCreatedAt())
+                .updatedAt(savedRoute.getUpdatedAt())
+                .build();
+
+    } catch (NotFoundException e) {
+        throw e;
+    } catch (Exception e) {
+    e.printStackTrace(); // imprime el error en consola
+    throw new RuntimeException("Error updating route status: " + e.getMessage());
+}
+}
+
 
 
     @Override
