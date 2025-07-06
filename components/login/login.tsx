@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import OTPVerification from "../otp/OTPVerification";
 
+
 type ErrorType = {
   message: string;
   field?: "email" | "password" | "general";
@@ -23,7 +24,7 @@ type ErrorType = {
 
 export default function LoginScreen() {
   const navigation = useNavigation<any>();
-  const { signIn } = useSession();
+  const { signIn, user } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -217,8 +218,13 @@ export default function LoginScreen() {
       setShowSuccessAnimation(true);
       setTimeout(async () => {
         setShowSuccessAnimation(false);
+
+        // Enviar token de notificaciones push al backend
+        //await registerForPushNotificationsAsync(user?.id);
+
         await signIn(data.token); // navega a la siguiente pantalla desde signIn()
-      }, 2000); // animación por 2 segundos
+      }, 2000);
+
     } catch (error: any) {
       if (error.response) {
         console.log("Login error:", error.response.data);
@@ -500,7 +506,7 @@ export default function LoginScreen() {
         </Pressable>
       </View>
 
-      {/* 🚀 Animación de éxito */}
+      {/* Animación de éxito */}
       {showSuccessAnimation && (
         <Modal transparent animationType="fade">
           <View

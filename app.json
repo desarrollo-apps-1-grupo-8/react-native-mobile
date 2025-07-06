@@ -20,7 +20,11 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
+
+      "package": "com.hessoide.grupo8mobile"
+
       "permissions": ["CAMERA"]
+
     },
     "web": {
       "bundler": "metro",
@@ -46,6 +50,12 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "34e677dd-5c6a-4fb2-a887-3988e94afdba"
+      }
+    },
+    "owner": "grupo8"
   }
 }

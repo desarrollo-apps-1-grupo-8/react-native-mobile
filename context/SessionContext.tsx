@@ -15,6 +15,7 @@ type User = {
   name: string;
   email: string;
   role: string;
+  token: string;
 }
 
 type TokenPayload = {
@@ -54,16 +55,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const createUserFromPayload = (payload: TokenPayload): User => {
-    const name = payload.first_name || payload.firstName || payload.name || 'Usuario';
-    
-    return {
-      id: payload.id,
-      name: name,
-      email: payload.sub,
-      role: payload.role,
-    };
+  const createUserFromPayload = (payload: TokenPayload): Omit<User, 'token'> => {
+  const name = payload.first_name || payload.firstName || payload.name || 'Usuario';
+
+  return {
+    id: payload.id,
+    name,
+    email: payload.sub,
+    role: payload.role,
   };
+};
+
   
   const initializeSession = async () => {
     if (isInitialized) return;
@@ -73,7 +75,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (token) {
         const payload = decodeToken(token);
         if (payload) {
-          const userData = createUserFromPayload(payload);
+          const userData = {
+        ...createUserFromPayload(payload),
+        token: token,
+        };
           setUser(userData);
           setSession(true);
         } else {
@@ -113,25 +118,34 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (token: string) => {
-    try {
-      const formattedToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-      
-      // Decode and validate token before storing
-      const payload = decodeToken(formattedToken);
-      if (!payload) {
-        throw new Error('Invalid token format');
-      }
+  try {
+    // Asegura que el token tenga formato "Bearer ..."
+    const formattedToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
 
-      await SecureStore.setItemAsync('session', formattedToken);
-      
-      const userData = createUserFromPayload(payload);
-      setUser(userData);
-      setSession(true);
-    } catch (error) {
-      console.error('Error signing in:', error);
-      throw error;
+    // Decodificar el token
+    const payload = decodeToken(formattedToken);
+    if (!payload) {
+      throw new Error('Invalid token format');
     }
-  };
+
+    // Guardar el token en SecureStore
+    await SecureStore.setItemAsync('session', formattedToken);
+
+    // Crear el objeto usuario con el token incluido
+    const userData = {
+      ...createUserFromPayload(payload),
+      token: formattedToken, // ✅ importante para usarlo en RoutesScreen
+    };
+
+    // Guardar el usuario y la sesión activa
+    setUser(userData);
+    setSession(true);
+  } catch (error) {
+    console.error('Error signing in:', error);
+    throw error;
+  }
+};
+
 
   const signOut = async () => {
     try {
