@@ -181,7 +181,7 @@ export default function RegisterScreen() {
       setLoading(true);
 
       await api.post("/register", { 
-        email, 
+        email: email.trim().toLowerCase(), 
         password, 
         firstName, 
         lastName, 
@@ -363,7 +363,7 @@ export default function RegisterScreen() {
               </Animated.View>
               {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
             </View>
-            <View style={styles.inputGroup}>
+            <View style={styles.inputGroup}>          
               <Text style={styles.label}>Contraseña</Text>
               <Animated.View style={[styles.passwordContainer, { borderColor: getBorderColor('password', passwordBorderAnim) }]}>
                 <TextInput
@@ -373,7 +373,6 @@ export default function RegisterScreen() {
                   placeholderTextColor="#666"
                   keyboardType="default"
                   secureTextEntry={showPassword}
-                  showSoftInputOnFocus={false}
                   value={password}
                   onChangeText={setPassword}
                   onFocus={() => handleFocus('password', passwordBorderAnim)}
@@ -395,7 +394,7 @@ export default function RegisterScreen() {
               </Animated.View>
               {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
             </View>
-            <View style={styles.inputGroup}>
+            <View style={styles.inputGroup}> 
               <Text style={styles.label}>Confirmar Contraseña</Text>
               <Animated.View style={[styles.passwordContainer, { borderColor: getBorderColor('confirmPassword', confirmPasswordBorderAnim) }]}>
                 <TextInput
@@ -405,7 +404,6 @@ export default function RegisterScreen() {
                   placeholderTextColor="#666"
                   keyboardType="default"
                   secureTextEntry={showConfirmPassword}
-                  showSoftInputOnFocus={false}
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                   onFocus={() => handleFocus('confirmPassword', confirmPasswordBorderAnim)}

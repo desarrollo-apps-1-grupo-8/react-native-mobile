@@ -9,7 +9,10 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Esta aplicación necesita acceso a la cámara para escanear códigos QR de los paquetes."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -17,7 +20,11 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
+
       "package": "com.hessoide.grupo8mobile"
+
+      "permissions": ["CAMERA"]
+
     },
     "web": {
       "bundler": "metro",
@@ -33,7 +40,13 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Esta aplicación necesita acceso a la cámara para escanear códigos QR de los paquetes."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

@@ -8,6 +8,7 @@ export interface DeliveryRouteResponseWithUserInfo {
   deliveryUserInfo: string;
   createdAt: string;
   updatedAt: string;
+  completionCode?: string;
 }
 
 export interface DeliveryRouteResponse {
@@ -20,4 +21,5 @@ export interface DeliveryRouteResponse {
   deliveryUserId: number;
   createdAt: string;
   updatedAt: string;
+  completionCode?: string;
 } 

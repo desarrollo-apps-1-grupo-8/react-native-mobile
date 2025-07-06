@@ -14,11 +14,13 @@ export default function ForgotPasswordScreen() {
     }
  
     setLoading(true);
+    // Let OTPVerification component handle sending the code
     setShowOtp(true);
+    setLoading(false);
   };
  
   if (showOtp) {
-    return <OTPVerification email={email} isPasswordRecovery />
+    return <OTPVerification email={email.trim().toLowerCase()} isPasswordRecovery />
   }
  
   return (

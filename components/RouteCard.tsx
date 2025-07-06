@@ -1,68 +1,170 @@
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { RouteStatusEnum } from "../utils/routeStatusEnum";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { DeliveryRouteResponseWithUserInfo } from "../types/route";
+import { openLocationInMaps } from "../utils/mapUtils";
+import { RoleEnum } from "../utils/roleEnum";
 
-const statusColors: Record<string, { bg: string; text: string }> = {
-  IN_TRANSIT: { bg: "#2563eb", text: "#fff" }, // Azul
-  DELAYED: { bg: "#ef4444", text: "#fff" },   // Rojo
-  COMPLETED: { bg: "#22c55e", text: "#fff" }, // Verde
-  AVAILABLE: { bg: "#f59e42", text: "#fff" }, // Naranja
-  DEFAULT: { bg: "#6b7280", text: "#fff" },   // Gris
-};
+interface RouteCardProps {
+  route: DeliveryRouteResponseWithUserInfo;
+  role: string;
+  onPress: (routeId: number, status: string) => void;
+  onViewCode?: () => void;
+  showCodeButton?: boolean;
+}
 
-const getStatusStyle = (status: string) => statusColors[status] || statusColors.DEFAULT;
-
-export const RouteCard: React.FC<any> = ({ route, role, onPress }) => {
-  const isRepartidor = role === "REPARTIDOR";
+export const RouteCard: React.FC<RouteCardProps> = ({ 
+  route, 
+  role, 
+  onPress,
+  onViewCode,
+  showCodeButton = false
+}) => {
   const status = route.status;
-  const statusSpanish = RouteStatusEnum[status as keyof typeof RouteStatusEnum]?.spanish || status;
+    
+  const getStatusStyle = (status: string) => {
+    switch (status) {
+      case "AVAILABLE":
+        return { bg: "#f59e0b", text: "white" };
+      case "IN_PROGRESS":
+        return { bg: "#3b82f6", text: "white" };
+      case "COMPLETED":
+        return { bg: "#22c55e", text: "white" };
+      default:
+        return { bg: "#6b7280", text: "white" };
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "AVAILABLE":
+        return "Pendiente";
+      case "IN_PROGRESS":
+        return "En progreso";
+      case "COMPLETED":
+        return "Completada";
+      default:
+        return "Desconocido";
+    }
+  };
+
+  const getActionButtonText = (status: string) => {
+    switch (status) {
+      case "IN_PROGRESS":
+        return "Completar";
+      default:
+        return "";
+    }
+  };
+
+  const getNextStatus = (status: string) => {
+    switch (status) {
+      case "AVAILABLE":
+        return "IN_PROGRESS";
+      case "IN_PROGRESS":
+        return "COMPLETED";
+      default:
+        return "";
+    }
+  };
+
+  const renderActionButton = () => {
+    if (role !== RoleEnum.REPARTIDOR || route.status !== "IN_PROGRESS") {
+      return null;
+    }
+
+    return (
+      <Pressable
+        style={styles.actionButton}
+        onPress={() => onPress(route.id, getNextStatus(route.status))}
+      >
+        <Ionicons name="checkmark-circle-outline" size={18} color="#fff" style={styles.actionIcon} />
+        <Text style={styles.actionButtonText}>
+          {getActionButtonText(route.status)}
+        </Text>
+      </Pressable>
+    );
+  };
+
+  const handleOpenMaps = () => {
+    openLocationInMaps(route.destination);
+  };
+
+  const renderMapButton = () => {
+    if (role !== RoleEnum.REPARTIDOR || (route.status !== "IN_PROGRESS" && route.status !== "COMPLETED")) {
+      return null;
+    }
+
+    return (
+      <Pressable
+        style={styles.mapButton}
+        onPress={handleOpenMaps}
+      >
+        <Ionicons name="map-outline" size={18} color="#fff" style={styles.mapIcon} />
+        <Text style={styles.mapButtonText}>Ver mapa</Text>
+      </Pressable>
+    );
+  };
+
+  const renderViewCodeButton = () => {
+    if (!showCodeButton || !onViewCode) {
+      return null;
+    }
+
+    return (
+      <Pressable
+        style={styles.viewCodeButton}
+        onPress={onViewCode}
+      >
+        <Ionicons name="key-outline" size={18} color="#fff" style={styles.viewCodeIcon} />
+        <Text style={styles.viewCodeText}>Ver código</Text>
+      </Pressable>
+    );
+  };
+
   const statusStyle = getStatusStyle(status);
 
   return (
     <View style={styles.card}>
-      <View style={styles.headerRow}>
-        <Text style={styles.tracking}>{route.id}</Text>
-        <View style={[styles.badge, { backgroundColor: statusStyle.bg }]}> 
-          <Text style={{ color: statusStyle.text, fontWeight: "bold", fontSize: 12 }}>{statusSpanish}</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>Ruta #{route.id}</Text>
+        <View
+          style={[
+            styles.statusBadge,
+            { backgroundColor: statusStyle.bg },
+          ]}
+        >
+          <Text style={styles.statusText}>{getStatusText(route.status)}</Text>
         </View>
       </View>
-      <Text style={styles.label}>Info del paquete:</Text>
-      <Text style={styles.value}>{route.packageInfo}</Text>
-      <Text style={styles.label}>Origen:</Text>
-      <Text style={styles.value}>{route.origin}</Text>
-      <Text style={styles.label}>Destino:</Text>
-      <Text style={styles.value}>{route.destination}</Text>
-      <Text style={styles.label}>Cliente:</Text>
-      <Text style={styles.value}>{route.userInfo}</Text>
-      {route.deliveryUserInfo && 
-      <>
-        <Text style={styles.label}>Repartidor:</Text>
-        <Text style={styles.value}>{route.deliveryUserInfo}</Text>
-      </>}
-      <View style={styles.row}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.label}>Fecha de creación:</Text>
-          <Text style={styles.value}>{route.createdAt?.split('T')[0]}</Text>
+
+      <View style={styles.content}>
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>Origen:</Text>
+          <Text style={styles.value}>{route.origin}</Text>
         </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.label}>Última actualización:</Text>
-          <Text style={styles.value}>{route.updatedAt?.split('T')[0]}</Text>
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>Destino:</Text>
+          <Text style={styles.value}>{route.destination}</Text>
         </View>
+        {role === RoleEnum.REPARTIDOR && (
+          <View style={styles.infoRow}>
+            <Text style={styles.label}>Cliente:</Text>
+            <Text style={styles.value}>{route.userInfo}</Text>
+          </View>
+        )}
+        {role === RoleEnum.USUARIO && route.deliveryUserInfo && (
+          <View style={styles.infoRow}>
+            <Text style={styles.label}>Repartidor:</Text>
+            <Text style={styles.value}>{route.deliveryUserInfo}</Text>
+          </View>
+        )}
       </View>
-      <View style={styles.buttonRow}>
-        {/* <TouchableOpacity style={styles.buttonSecundario}>
-          <Text style={styles.buttonText}>Ver detalles</Text>
-        </TouchableOpacity> */}
-        {isRepartidor && status === "AVAILABLE" && (
-          <TouchableOpacity style={styles.buttonPrincipal} onPress={() => onPress(route.id, "IN_PROGRESS")}> 
-            <Text style={styles.buttonText}>Asignarme ruta</Text>
-          </TouchableOpacity>
-        )}
-        {isRepartidor && status === "IN_PROGRESS" && (
-          <TouchableOpacity style={styles.buttonPrincipal} onPress={() => onPress(route.id, "COMPLETED")}> 
-            <Text style={styles.buttonText}>Finalizar ruta</Text>
-          </TouchableOpacity>
-        )}
+
+      <View style={styles.footer}>
+        {renderMapButton()}
+        {renderActionButton()}
+        {renderViewCodeButton()}
       </View>
     </View>
   );
@@ -70,71 +172,124 @@ export const RouteCard: React.FC<any> = ({ route, role, onPress }) => {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#18181b',
+    backgroundColor: "#1e1e1e",
     borderRadius: 12,
-    padding: 18,
-    marginVertical: 10,
-    marginHorizontal: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
+    padding: 16,
+    marginBottom: 16,
+    marginHorizontal: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
   },
-  tracking: {
-    color: '#fff',
-    fontWeight: 'bold',
+  title: {
     fontSize: 18,
-    letterSpacing: 1,
+    fontWeight: "600",
+    color: "#ffffff",
   },
-  badge: {
-    borderRadius: 12,
-    paddingHorizontal: 12,
+  statusBadge: {
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    alignSelf: 'flex-start',
+    borderRadius: 12,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#ffffff",
+  },
+  content: {
+    marginBottom: 16,
+  },
+  infoRow: {
+    flexDirection: "row",
+    marginBottom: 8,
   },
   label: {
-    color: '#a1a1aa',
-    fontSize: 13,
-    marginTop: 6,
+    width: 90,
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#9ca3af",
   },
   value: {
-    color: '#fff',
-    fontSize: 15,
-    marginBottom: 2,
-  },
-  row: {
-    flexDirection: 'row',
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 12,
-    gap: 10,
-  },
-  buttonPrincipal: {
-    backgroundColor: '#2563eb',
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    marginLeft: 8,
-  },
-  buttonSecundario: {
-    backgroundColor: '#27272a',
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    flex: 1,
     fontSize: 14,
+    color: "#ffffff",
+  },
+  footer: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
+  },
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#10b981",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+    shadowColor: "#10b981",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  actionIcon: {
+    marginRight: 6,
+  },
+  actionButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#ffffff",
+  },
+  mapButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#3b82f6",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginRight: 12,
+    shadowColor: "#3b82f6",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  mapIcon: {
+    marginRight: 6,
+  },
+  mapButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#ffffff",
+  },
+  viewCodeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#6b7280",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginLeft: 12,
+    shadowColor: "#6b7280",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  viewCodeIcon: {
+    marginRight: 6,
+  },
+  viewCodeText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#ffffff",
   },
 }); 

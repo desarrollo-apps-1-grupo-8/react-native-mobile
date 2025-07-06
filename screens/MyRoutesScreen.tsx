@@ -2,8 +2,10 @@ import api from "@/services/api";
 import { RoleEnum } from "@/utils/roleEnum";
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect } from "@react-navigation/native";
+import { HttpStatusCode } from "axios";
 import React, { useCallback, useState } from "react";
 import {
+  Alert,
   FlatList,
   RefreshControl,
   SafeAreaView,
@@ -13,6 +15,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { RouteCard } from "../components/RouteCard";
+import CompletionCodeInput from "../components/shipments/CompletionCodeInput";
 import { useSession } from "../context/SessionContext";
 import { DeliveryRouteResponseWithUserInfo } from "../types/route";
 
@@ -21,7 +24,14 @@ export const MyRoutesScreen: React.FC = () => {
   const [routes, setRoutes] = useState<DeliveryRouteResponseWithUserInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [showCompletionCodeInput, setShowCompletionCodeInput] = useState(false);
+  const [selectedRouteId, setSelectedRouteId] = useState<number | null>(null);
   const insets = useSafeAreaInsets();
+
+  // Debug log for modal state
+  React.useEffect(() => {
+    console.log(`MyRoutesScreen - showCompletionCodeInput state changed to: ${showCompletionCodeInput}`);
+  }, [showCompletionCodeInput]);
 
   const fetchRoutes = useCallback(async (isRefreshing = false) => {
     if (!session) return;
@@ -64,19 +74,56 @@ export const MyRoutesScreen: React.FC = () => {
     deliveryRouteId: number,
     status: string
   ) => {
+    console.log(`MyRoutesScreen - handleChangeRouteStatus called with: routeId=${deliveryRouteId}, status=${status}, userRole=${user?.role}`);
     setLoading(true);
     try {
-      await api.post(`/routes/update-status`, {
-        deliveryRouteId,
-        status,
-        deliveryUserId: user?.id,
-      });
-      await fetchRoutes();
-
+      if (user?.role === RoleEnum.REPARTIDOR) {
+        console.log(`MyRoutesScreen - User is REPARTIDOR, checking if status is COMPLETED: ${status === "COMPLETED"}`);
+        if (status === "COMPLETED") {
+          // For COMPLETED status, show the completion code input
+          console.log("MyRoutesScreen - Opening completion code input modal");
+          setSelectedRouteId(deliveryRouteId);
+          setShowCompletionCodeInput(true);
+          setLoading(false);
+          return;
+        }
+        
+        await api.post(`/routes/update-status`, {
+          deliveryRouteId,
+          status,
+          deliveryUserId: user?.id,
+        });
+        await fetchRoutes();
+      }
     } catch (error: any) {
       console.error("Error al cambiar estado de la ruta:", error);
+      Alert.alert('Error', 'No se pudo actualizar el estado de la ruta');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSubmitCompletionCode = async (code: string) => {
+    console.log(`MyRoutesScreen - handleSubmitCompletionCode called with code: ${code}, selectedRouteId: ${selectedRouteId}`);
+    if (!selectedRouteId) return;
+    
+    try {
+      const response = await api.post(`/routes/update-status`, {
+        deliveryRouteId: selectedRouteId,
+        status: "COMPLETED",
+        deliveryUserId: user?.id,
+        completionCode: code
+      });
+      
+      if (response.status !== HttpStatusCode.Ok) {
+        throw new Error('Código de confirmación inválido');
+      }
+      
+      await fetchRoutes();
+      return Promise.resolve();
+    } catch (error: any) {
+      console.error("Error al verificar el código de confirmación:", error);
+      return Promise.reject(new Error('Código de confirmación inválido'));
     }
   };
 
@@ -118,6 +165,16 @@ export const MyRoutesScreen: React.FC = () => {
               onPress={(routeId: number, status: string) => handleChangeRouteStatus(routeId, status)}
             />
           )}
+        />
+
+        <CompletionCodeInput
+          visible={showCompletionCodeInput}
+          routeId={selectedRouteId || 0}
+          onClose={() => {
+            console.log("MyRoutesScreen - CompletionCodeInput: onClose called");
+            setShowCompletionCodeInput(false);
+          }}
+          onSubmit={handleSubmitCompletionCode}
         />
       </View>
     </SafeAreaView>
