@@ -55,9 +55,6 @@ export const RoutesScreen: React.FC = () => {
         response = await api.get(`/routes/user/${user?.id}`);
       }
       
-      console.log("Rutas recibidas:", JSON.stringify(response.data, null, 2));
-      console.log("Rol del usuario:", user?.role);
-      
       setRoutes(response.data);
     } catch (error: any) {
       console.error("Error al obtener las rutas:", error);
@@ -116,7 +113,6 @@ const enviarToken = async () => {
       } else if (user?.role === RoleEnum.USUARIO) {
         // If user is a regular user, show the completion code
         const route = routes.find(r => r.id === deliveryRouteId);
-        console.log("Ruta seleccionada:", route);
         if (route && route.completionCode) {
           setCompletionCode(route.completionCode);
           setShowCompletionCode(true);
@@ -177,7 +173,6 @@ const enviarToken = async () => {
   };
 
   const handleViewCompletionCode = (route: DeliveryRouteResponseWithUserInfo) => {
-    console.log("Mostrando código de confirmación:", route.completionCode);
     if (route.completionCode) {
       setCompletionCode(route.completionCode);
       setShowCompletionCode(true);
@@ -216,7 +211,6 @@ const enviarToken = async () => {
             </View>
           }
           renderItem={({ item }) => {
-            console.log(`Renderizando ruta ${item.id}, rol: ${user?.role}, tiene código: ${!!item.completionCode}`);
             return (
               <RouteCard
                 route={item}

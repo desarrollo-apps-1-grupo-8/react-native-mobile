@@ -194,9 +194,6 @@ export default function LoginScreen() {
 
       const data = response.data;
 
-      console.log('Login response:', data); // Debug log
-      
-      // Check if login was not successful
       if (!data.success) {
         if (data.status === 'NEEDS_VERIFICATION' || data.message === 'NEEDS_VERIFICATION') {
           setShowOTP(true);
@@ -227,9 +224,9 @@ export default function LoginScreen() {
 
     } catch (error: any) {
       if (error.response) {
-        console.log("Login error:", error.response.data);
+        console.error("Login error:", error.response.data);
       } else {
-        console.log("Login error:", error.message);
+        console.error("Login error:", error.message);
       }
 
       if (error.response?.data?.message === "NEEDS_VERIFICATION") {

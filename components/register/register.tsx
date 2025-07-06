@@ -192,10 +192,10 @@ export default function RegisterScreen() {
       setShowOTP(true);
     } catch (error: any) {
       if (error.response) {
-        console.log('Register error:', error.response.data);
+        console.error('Register error:', error.response.data);
         Alert.alert("Error", error.response.data.message || "Ocurrió un error");
       } else {
-        console.log('Register error:', error.message);
+        console.error('Register error:', error.message);
         Alert.alert("Error", "No se pudo conectar al servidor.");
       }
     } finally {

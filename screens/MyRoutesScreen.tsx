@@ -28,11 +28,6 @@ export const MyRoutesScreen: React.FC = () => {
   const [selectedRouteId, setSelectedRouteId] = useState<number | null>(null);
   const insets = useSafeAreaInsets();
 
-  // Debug log for modal state
-  React.useEffect(() => {
-    console.log(`MyRoutesScreen - showCompletionCodeInput state changed to: ${showCompletionCodeInput}`);
-  }, [showCompletionCodeInput]);
-
   const fetchRoutes = useCallback(async (isRefreshing = false) => {
     if (!session) return;
     
@@ -45,7 +40,6 @@ export const MyRoutesScreen: React.FC = () => {
     try {
       let response;
       response = await api.get(`/routes/deliveryUser/${user?.id}`);
-      console.log(response)
 
       setRoutes(response.data);
     } catch (error: any) {
@@ -74,14 +68,10 @@ export const MyRoutesScreen: React.FC = () => {
     deliveryRouteId: number,
     status: string
   ) => {
-    console.log(`MyRoutesScreen - handleChangeRouteStatus called with: routeId=${deliveryRouteId}, status=${status}, userRole=${user?.role}`);
     setLoading(true);
     try {
       if (user?.role === RoleEnum.REPARTIDOR) {
-        console.log(`MyRoutesScreen - User is REPARTIDOR, checking if status is COMPLETED: ${status === "COMPLETED"}`);
         if (status === "COMPLETED") {
-          // For COMPLETED status, show the completion code input
-          console.log("MyRoutesScreen - Opening completion code input modal");
           setSelectedRouteId(deliveryRouteId);
           setShowCompletionCodeInput(true);
           setLoading(false);
@@ -104,7 +94,6 @@ export const MyRoutesScreen: React.FC = () => {
   };
 
   const handleSubmitCompletionCode = async (code: string) => {
-    console.log(`MyRoutesScreen - handleSubmitCompletionCode called with code: ${code}, selectedRouteId: ${selectedRouteId}`);
     if (!selectedRouteId) return;
     
     try {
@@ -171,7 +160,6 @@ export const MyRoutesScreen: React.FC = () => {
           visible={showCompletionCodeInput}
           routeId={selectedRouteId || 0}
           onClose={() => {
-            console.log("MyRoutesScreen - CompletionCodeInput: onClose called");
             setShowCompletionCodeInput(false);
           }}
           onSubmit={handleSubmitCompletionCode}
