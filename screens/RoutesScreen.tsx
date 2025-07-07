@@ -1,8 +1,8 @@
 import api from "@/services/api";
 import { registerForPushNotificationsAsync } from "@/utils/notificationSetup";
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { useFocusEffect } from '@react-navigation/native';
-import * as SecureStore from 'expo-secure-store';
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useFocusEffect } from "@react-navigation/native";
+import * as SecureStore from "expo-secure-store";
 import React, { useCallback, useState } from "react";
 
 import {
@@ -16,10 +16,10 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { RouteCard } from "../components/RouteCard";
 import QRScanner from "../components/scanner/QRScanner";
 import CompletionCodeModal from "../components/shipments/CompletionCodeModal";
 import PackageInfoModal from "../components/shipments/PackageInfoModal";
+import { RouteCard } from "../components/shipments/RouteCard";
 import { useSession } from "../context/SessionContext";
 import { DeliveryRouteResponseWithUserInfo } from "../types/route";
 import { RoleEnum } from "../utils/roleEnum";
@@ -33,72 +33,66 @@ export const RoutesScreen: React.FC = () => {
   const [showPackageInfo, setShowPackageInfo] = useState(false);
   const [packageInfo, setPackageInfo] = useState<any>(null);
   const [showCompletionCode, setShowCompletionCode] = useState(false);
-  const [completionCode, setCompletionCode] = useState<string>('');
+  const [completionCode, setCompletionCode] = useState<string>("");
 
   const insets = useSafeAreaInsets();
 
-  const fetchRoutes = useCallback(async (isRefreshing = false) => {
-    if (!session) return;
-    
-    if (isRefreshing) {
-      setRefreshing(true);
-    } else {
-      setLoading(true);
-    }
-    
-    try {
-      let response;
+  const fetchRoutes = useCallback(
+    async (isRefreshing = false) => {
+      if (!session) return;
 
-      if (user?.role === RoleEnum.REPARTIDOR) {
-        response = await api.get(`/routes`);
-      } else {
-        response = await api.get(`/routes/user/${user?.id}`);
-      }
-      
-      console.log("Rutas recibidas:", JSON.stringify(response.data, null, 2));
-      console.log("Rol del usuario:", user?.role);
-      
-      setRoutes(response.data);
-    } catch (error: any) {
-      console.error("Error al obtener las rutas:", error);
-      setRoutes([]);
-    } finally {
       if (isRefreshing) {
-        setRefreshing(false);
+        setRefreshing(true);
       } else {
-        setLoading(false);
+        setLoading(true);
       }
-    }
-  }, [session, user]);
+
+      try {
+        let response;
+
+        if (user?.role === RoleEnum.REPARTIDOR) {
+          response = await api.get(`/routes`);
+        } else {
+          response = await api.get(`/routes/user/${user?.id}`);
+        }
+
+        setRoutes(response.data);
+      } catch (error: any) {
+        console.error("Error al obtener las rutas:", error);
+        setRoutes([]);
+      } finally {
+        if (isRefreshing) {
+          setRefreshing(false);
+        } else {
+          setLoading(false);
+        }
+      }
+    },
+    [session, user]
+  );
 
   const handleRefresh = useCallback(() => {
     fetchRoutes(true);
   }, [fetchRoutes]);
 
   useFocusEffect(
-  useCallback(() => {
-    fetchRoutes();
+    useCallback(() => {
+      fetchRoutes();
+      const enviarToken = async () => {
+        if (!user?.id) return;
 
-console.log("📦 user:", user);
-console.log("📦 session:", session);
+        const token = await SecureStore.getItemAsync("session");
 
-const enviarToken = async () => {
-  if (!user?.id) return;
+        if (!token) {
+          return;
+        }
 
-  const token = await SecureStore.getItemAsync("session");
+        await registerForPushNotificationsAsync(user.id, token);
+      };
 
-  if (!token) {
-    console.log("No se encontró token en SecureStore");
-    return;
-  }
-
-  await registerForPushNotificationsAsync(user.id, token);
-};
-
-    enviarToken();
-  }, [fetchRoutes, user])
-);
-
+      enviarToken();
+    }, [fetchRoutes, user])
+  );
 
   const handleChangeRouteStatus = async (
     deliveryRouteId: number,
@@ -114,9 +108,7 @@ const enviarToken = async () => {
         });
         await fetchRoutes();
       } else if (user?.role === RoleEnum.USUARIO) {
-        // If user is a regular user, show the completion code
-        const route = routes.find(r => r.id === deliveryRouteId);
-        console.log("Ruta seleccionada:", route);
+        const route = routes.find((r) => r.id === deliveryRouteId);
         if (route && route.completionCode) {
           setCompletionCode(route.completionCode);
           setShowCompletionCode(true);
@@ -124,27 +116,25 @@ const enviarToken = async () => {
       }
     } catch (error: any) {
       console.error("Error al cambiar estado de la ruta:", error);
-      Alert.alert('Error', 'No se pudo actualizar el estado de la ruta');
+      Alert.alert("Error", "No se pudo actualizar el estado de la ruta");
     } finally {
       setLoading(false);
     }
   };
 
-
-
   const handleQRScan = async (data: string) => {
     try {
       setShowScanner(false);
-      
+
       const response = await api.post(`/routes/update-status`, {
         deliveryRouteId: data,
         deliveryUserId: user?.id,
-        status: "IN_PROGRESS"
+        status: "IN_PROGRESS",
       });
-      
+
       if (response.data) {
         const routeData = response.data;
-        
+
         const formattedPackageInfo = {
           id: routeData.id.toString(),
           packageCode: routeData.id.toString(),
@@ -157,27 +147,28 @@ const enviarToken = async () => {
             id: routeData.id,
             origin: routeData.origin,
             destination: routeData.destination,
-          }
+          },
         };
-        
+
         setPackageInfo(formattedPackageInfo);
         setShowPackageInfo(true);
-        
+
         fetchRoutes();
       } else {
-        throw new Error('No se pudo obtener la información de la ruta');
+        throw new Error("No se pudo obtener la información de la ruta");
       }
     } catch (error) {
       console.error("Error al procesar el código QR:", error);
       Alert.alert(
-        'Error',
-        'No se pudo obtener la información de la ruta. Por favor, verifica el código QR.'
+        "Error",
+        "No se pudo obtener la información de la ruta. Por favor, verifica el código QR."
       );
     }
   };
 
-  const handleViewCompletionCode = (route: DeliveryRouteResponseWithUserInfo) => {
-    console.log("Mostrando código de confirmación:", route.completionCode);
+  const handleViewCompletionCode = (
+    route: DeliveryRouteResponseWithUserInfo
+  ) => {
     if (route.completionCode) {
       setCompletionCode(route.completionCode);
       setShowCompletionCode(true);
@@ -191,8 +182,8 @@ const enviarToken = async () => {
           data={routes}
           keyExtractor={(item) => item.id.toString()}
           refreshControl={
-            <RefreshControl 
-              refreshing={refreshing} 
+            <RefreshControl
+              refreshing={refreshing}
               onRefresh={handleRefresh}
               tintColor="#fff"
               colors={["#fff"]}
@@ -201,49 +192,53 @@ const enviarToken = async () => {
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Ionicons 
-                name="location-outline" 
-                size={64} 
-                color="#666666" 
+              <Ionicons
+                name="location-outline"
+                size={64}
+                color="#666666"
                 style={styles.emptyIcon}
               />
               <Text style={styles.emptySubtitle}>
-                {user?.role === RoleEnum.REPARTIDOR 
-                  ? "No tienes rutas asignadas en este momento."
-                  : "No tienes envíos en este momento."
-                }
+                No existen envíos disponibles en este momento.
               </Text>
             </View>
           }
           renderItem={({ item }) => {
-            console.log(`Renderizando ruta ${item.id}, rol: ${user?.role}, tiene código: ${!!item.completionCode}`);
             return (
               <RouteCard
                 route={item}
                 role={user?.role || ""}
-                onPress={(routeId: number, status: string) => handleChangeRouteStatus(routeId, status)}
-                onViewCode={user?.role === RoleEnum.USUARIO ? () => handleViewCompletionCode(item) : undefined}
-                showCodeButton={user?.role === RoleEnum.USUARIO && !!item.completionCode}
+                onPress={(routeId: number, status: string) =>
+                  handleChangeRouteStatus(routeId, status)
+                }
+                onViewCode={
+                  user?.role === RoleEnum.USUARIO
+                    ? () => handleViewCompletionCode(item)
+                    : undefined
+                }
+                showCodeButton={
+                  user?.role === RoleEnum.USUARIO && !!item.completionCode
+                }
               />
             );
           }}
         />
-        
+
         {user?.role === RoleEnum.REPARTIDOR && (
-          <Pressable 
-            style={styles.fabButton} 
+          <Pressable
+            style={styles.fabButton}
             onPress={() => setShowScanner(true)}
           >
             <Ionicons name="qr-code" size={28} color="white" />
           </Pressable>
         )}
-        
+
         <QRScanner
           visible={showScanner}
           onClose={() => setShowScanner(false)}
           onScan={handleQRScan}
         />
-        
+
         <PackageInfoModal
           visible={showPackageInfo}
           packageInfo={packageInfo}
@@ -255,8 +250,6 @@ const enviarToken = async () => {
           completionCode={completionCode}
           onClose={() => setShowCompletionCode(false)}
         />
-
-
       </View>
     </SafeAreaView>
   );
@@ -272,17 +265,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#121212",
   },
   fabButton: {
-    position: 'absolute',
+    position: "absolute",
     right: 20,
     bottom: 20, // Ajustado para estar muchísimo más abajo, casi pegado al tab navigator
-    backgroundColor: '#3B82F6',
+    backgroundColor: "#3B82F6",
     width: 60,
     height: 60,
     borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     elevation: 8,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4,

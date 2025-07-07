@@ -1,6 +1,6 @@
+import OTPVerification from '@/components/otp/OTPVerification';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import OTPVerification from '../otp/OTPVerification';
  
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');

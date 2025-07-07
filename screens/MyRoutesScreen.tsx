@@ -1,6 +1,6 @@
 import api from "@/services/api";
 import { RoleEnum } from "@/utils/roleEnum";
-import Ionicons from '@expo/vector-icons/Ionicons';
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useFocusEffect } from "@react-navigation/native";
 import { HttpStatusCode } from "axios";
 import React, { useCallback, useState } from "react";
@@ -14,8 +14,8 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { RouteCard } from "../components/RouteCard";
 import CompletionCodeInput from "../components/shipments/CompletionCodeInput";
+import { RouteCard } from "../components/shipments/RouteCard";
 import { useSession } from "../context/SessionContext";
 import { DeliveryRouteResponseWithUserInfo } from "../types/route";
 
@@ -28,37 +28,34 @@ export const MyRoutesScreen: React.FC = () => {
   const [selectedRouteId, setSelectedRouteId] = useState<number | null>(null);
   const insets = useSafeAreaInsets();
 
-  // Debug log for modal state
-  React.useEffect(() => {
-    console.log(`MyRoutesScreen - showCompletionCodeInput state changed to: ${showCompletionCodeInput}`);
-  }, [showCompletionCodeInput]);
+  const fetchRoutes = useCallback(
+    async (isRefreshing = false) => {
+      if (!session) return;
 
-  const fetchRoutes = useCallback(async (isRefreshing = false) => {
-    if (!session) return;
-    
-    if (isRefreshing) {
-      setRefreshing(true);
-    } else {
-      setLoading(true);
-    }
-    
-    try {
-      let response;
-      response = await api.get(`/routes/deliveryUser/${user?.id}`);
-      console.log(response)
-
-      setRoutes(response.data);
-    } catch (error: any) {
-      console.error("Error al obtener las rutas:", error);
-      setRoutes([]);
-    } finally {
       if (isRefreshing) {
-        setRefreshing(false);
+        setRefreshing(true);
       } else {
-        setLoading(false);
+        setLoading(true);
       }
-    }
-  }, [session, user]);
+
+      try {
+        let response;
+        response = await api.get(`/routes/deliveryUser/${user?.id}`);
+
+        setRoutes(response.data);
+      } catch (error: any) {
+        console.error("Error al obtener las rutas:", error);
+        setRoutes([]);
+      } finally {
+        if (isRefreshing) {
+          setRefreshing(false);
+        } else {
+          setLoading(false);
+        }
+      }
+    },
+    [session, user]
+  );
 
   const handleRefresh = useCallback(() => {
     fetchRoutes(true);
@@ -74,20 +71,16 @@ export const MyRoutesScreen: React.FC = () => {
     deliveryRouteId: number,
     status: string
   ) => {
-    console.log(`MyRoutesScreen - handleChangeRouteStatus called with: routeId=${deliveryRouteId}, status=${status}, userRole=${user?.role}`);
     setLoading(true);
     try {
       if (user?.role === RoleEnum.REPARTIDOR) {
-        console.log(`MyRoutesScreen - User is REPARTIDOR, checking if status is COMPLETED: ${status === "COMPLETED"}`);
         if (status === "COMPLETED") {
-          // For COMPLETED status, show the completion code input
-          console.log("MyRoutesScreen - Opening completion code input modal");
           setSelectedRouteId(deliveryRouteId);
           setShowCompletionCodeInput(true);
           setLoading(false);
           return;
         }
-        
+
         await api.post(`/routes/update-status`, {
           deliveryRouteId,
           status,
@@ -97,33 +90,32 @@ export const MyRoutesScreen: React.FC = () => {
       }
     } catch (error: any) {
       console.error("Error al cambiar estado de la ruta:", error);
-      Alert.alert('Error', 'No se pudo actualizar el estado de la ruta');
+      Alert.alert("Error", "No se pudo actualizar el estado de la ruta");
     } finally {
       setLoading(false);
     }
   };
 
   const handleSubmitCompletionCode = async (code: string) => {
-    console.log(`MyRoutesScreen - handleSubmitCompletionCode called with code: ${code}, selectedRouteId: ${selectedRouteId}`);
     if (!selectedRouteId) return;
-    
+
     try {
       const response = await api.post(`/routes/update-status`, {
         deliveryRouteId: selectedRouteId,
         status: "COMPLETED",
         deliveryUserId: user?.id,
-        completionCode: code
+        completionCode: code,
       });
-      
+
       if (response.status !== HttpStatusCode.Ok) {
-        throw new Error('Código de confirmación inválido');
+        throw new Error("Código de confirmación inválido");
       }
-      
+
       await fetchRoutes();
       return Promise.resolve();
     } catch (error: any) {
       console.error("Error al verificar el código de confirmación:", error);
-      return Promise.reject(new Error('Código de confirmación inválido'));
+      return Promise.reject(new Error("Código de confirmación inválido"));
     }
   };
 
@@ -134,8 +126,8 @@ export const MyRoutesScreen: React.FC = () => {
           data={routes}
           keyExtractor={(item) => item.id.toString()}
           refreshControl={
-            <RefreshControl 
-              refreshing={refreshing} 
+            <RefreshControl
+              refreshing={refreshing}
               onRefresh={handleRefresh}
               tintColor="#fff"
               colors={["#fff"]}
@@ -144,15 +136,13 @@ export const MyRoutesScreen: React.FC = () => {
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Ionicons 
-                name="map-outline" 
-                size={64} 
-                color="#666666" 
+              <Ionicons
+                name="map-outline"
+                size={64}
+                color="#666666"
                 style={styles.emptyIcon}
               />
-              <Text style={styles.emptyTitle}>
-                Sin rutas asignadas
-              </Text>
+              <Text style={styles.emptyTitle}>Sin rutas asignadas</Text>
               <Text style={styles.emptySubtitle}>
                 No tienes rutas asignadas en este momento.
               </Text>
@@ -162,7 +152,9 @@ export const MyRoutesScreen: React.FC = () => {
             <RouteCard
               route={item}
               role={RoleEnum.REPARTIDOR}
-              onPress={(routeId: number, status: string) => handleChangeRouteStatus(routeId, status)}
+              onPress={(routeId: number, status: string) =>
+                handleChangeRouteStatus(routeId, status)
+              }
             />
           )}
         />
@@ -171,7 +163,6 @@ export const MyRoutesScreen: React.FC = () => {
           visible={showCompletionCodeInput}
           routeId={selectedRouteId || 0}
           onClose={() => {
-            console.log("MyRoutesScreen - CompletionCodeInput: onClose called");
             setShowCompletionCodeInput(false);
           }}
           onSubmit={handleSubmitCompletionCode}

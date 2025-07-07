@@ -1,7 +1,7 @@
-import ProfileScreen from "@/components/profile/profile";
 import { useSession } from "@/context/SessionContext";
 import { HistoryScreen } from "@/screens/HistoryScreen";
 import { MyRoutesScreen } from "@/screens/MyRoutesScreen";
+import ProfileScreen from "@/screens/ProfileScreen";
 import { RoutesScreen } from "@/screens/RoutesScreen";
 import { RoleEnum } from "@/utils/roleEnum";
 import { Ionicons } from "@expo/vector-icons";
