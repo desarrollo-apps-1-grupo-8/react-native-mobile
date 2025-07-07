@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from '@/services/api';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
@@ -41,13 +41,9 @@ export async function registerForPushNotificationsAsync(userId: string, jwt: str
       projectId,
     });
     const pushToken = tokenData.data;
-
-    console.log("User ID:", userId);
-    console.log("Push Token:", pushToken);
-
     // 5. Enviar el token al backend
-    await axios.post(
-      'http://10.0.2.2:8080/api/notifications/token',
+    await api.post(
+      '/notifications/token',
       {
         userId,
         token: pushToken,
@@ -59,7 +55,6 @@ export async function registerForPushNotificationsAsync(userId: string, jwt: str
       }
     );
 
-    console.log("Token enviado exitosamente al backend");
   } catch (error: any) {
     console.error(" Error en registerForPushNotificationsAsync:", error.response?.data || error.message);
   }
