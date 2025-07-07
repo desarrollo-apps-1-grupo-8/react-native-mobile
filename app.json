@@ -4,7 +4,7 @@
     "slug": "grupo8-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/splash-icon.png",
     "scheme": "grupo8mobile",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -12,23 +12,26 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSCameraUsageDescription": "Esta aplicación necesita acceso a la cámara para escanear códigos QR de los paquetes."
-      }
+      },
+      "bundleIdentifier": "com.hessoide.grupo8mobile"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/splash-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "googleServicesFile": "./google-services.json",
       "edgeToEdgeEnabled": true,
-
-      "package": "com.hessoide.grupo8mobile"
-
-      "permissions": ["CAMERA"]
-
+      "package": "com.hessoide.grupo8mobile",
+      "permissions": [
+        "CAMERA",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/splash-icon.png"
     },
     "plugins": [
       [
@@ -40,13 +43,22 @@
           "backgroundColor": "#ffffff"
         }
       ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/splash-icon.png",
+          "color": "#ffffff",
+          "defaultChannel": "default"
+        }
+      ],
       "expo-secure-store",
       [
         "expo-camera",
         {
           "cameraPermission": "Esta aplicación necesita acceso a la cámara para escanear códigos QR de los paquetes."
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

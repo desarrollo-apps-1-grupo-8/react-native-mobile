@@ -1,10 +1,11 @@
 import AppNavigator from '@/app/AppNavigator';
-import { SessionProvider } from './context/SessionContext';
 import * as Notifications from 'expo-notifications';
+import { SessionProvider } from './context/SessionContext';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
   }),

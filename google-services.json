@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "193104920626",
+    "project_id": "grupo8mobile-a8ec6",
+    "storage_bucket": "grupo8mobile-a8ec6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:193104920626:android:bc10ebe7299577a0a3bc2b",
+        "android_client_info": {
+          "package_name": "com.hessoide.grupo8mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDkR6jaIfE-nJWKsF7cH7_qsokGbGIvnnk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
