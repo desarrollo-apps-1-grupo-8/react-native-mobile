@@ -3,7 +3,7 @@ import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Animated, Clipboard, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 interface OTPVerificationProps {
   email: string;
@@ -142,7 +142,6 @@ export default function OTPVerification({ email, isPasswordRecovery = false}: OT
       setLoading(true);
       resetStatus();
       
-      // Use different endpoint based on context
       const endpoint = isPasswordRecovery ? '/verify-reset-code' : '/verify-code';
       const response = await api.post(endpoint, { 
         email, 
@@ -229,6 +228,30 @@ export default function OTPVerification({ email, isPasswordRecovery = false}: OT
 
   const handleResendCode = () => handleSendCode(true);
 
+  const handlePasteCode = async () => {
+    try {
+      const clipboardContent = await Clipboard.getString();
+      const cleanCode = clipboardContent.replace(/\D/g, '');
+      
+      if (cleanCode.length === 6) {
+        const codeArray = cleanCode.split('').slice(0, 6);
+        setCode(codeArray);
+        resetStatus();
+        
+        const completeCode = codeArray.join('');
+        handleVerify(completeCode);
+      } else {
+        setStatusMessage('El código debe tener 6 dígitos');
+        setVerificationStatus('error');
+        animateStatus(true);
+      }
+    } catch (error) {
+      setStatusMessage('No se pudo pegar el código');
+      setVerificationStatus('error');
+      animateStatus(true);
+    }
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -280,6 +303,17 @@ export default function OTPVerification({ email, isPasswordRecovery = false}: OT
               />
             </Animated.View>
           ))}
+          
+          <Pressable 
+            style={[
+              styles.pasteIconButton,
+              (loading || verificationStatus === 'success') && styles.pasteIconButtonDisabled
+            ]} 
+            onPress={handlePasteCode}
+            disabled={loading || verificationStatus === 'success'}
+          >
+            <Feather name="clipboard" size={20} color="white" />
+          </Pressable>
         </Animated.View>
 
         <Animated.Text 
@@ -391,6 +425,17 @@ const styles = StyleSheet.create({
   codeInputError: {
     borderColor: '#ef4444',
     backgroundColor: 'rgba(239, 68, 68, 0.2)',
+  },
+  pasteIconButton: {
+    padding: 12,
+    marginHorizontal: 10,
+    borderRadius: 8,
+    backgroundColor: '#333',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pasteIconButtonDisabled: {
+    opacity: 0.5,
   },
   footer: {
     width: '100%',
