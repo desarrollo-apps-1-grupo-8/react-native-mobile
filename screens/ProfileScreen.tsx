@@ -34,7 +34,6 @@ export default function ProfileScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        {/* Profile Header */}
         <View style={styles.header}>
           <View style={styles.avatarContainer}>
             <View style={styles.avatar}>

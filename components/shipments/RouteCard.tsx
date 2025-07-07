@@ -1,9 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { DeliveryRouteResponseWithUserInfo } from "../types/route";
-import { openLocationInMaps } from "../utils/mapUtils";
-import { RoleEnum } from "../utils/roleEnum";
+import { DeliveryRouteResponseWithUserInfo } from "../../types/route";
+import { openLocationInMaps } from "../../utils/mapUtils";
+import { RoleEnum } from "../../utils/roleEnum";
 
 interface RouteCardProps {
   route: DeliveryRouteResponseWithUserInfo;

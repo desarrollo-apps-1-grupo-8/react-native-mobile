@@ -1,7 +1,7 @@
-import LoginScreen from '@/components/login/login';
-import RegisterScreen from '@/components/register/register';
-import ForgotPasswordScreen from '@/components/resetPassword/forgot-password';
-import ResetPasswordScreen from '@/components/resetPassword/reset-password';
+import ForgotPasswordScreen from '@/screens/ForgotPasswordScreen';
+import LoginScreen from '@/screens/LoginScreen';
+import RegisterScreen from '@/screens/RegisterScreen';
+import ResetPasswordScreen from '@/screens/ResetPasswordScreen';
 import { createStackNavigator } from '@react-navigation/stack';
 
 type AuthStackParamList = {

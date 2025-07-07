@@ -14,8 +14,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import OTPVerification from "../otp/OTPVerification";
-
+import OTPVerification from "../components/otp/OTPVerification";
 
 type ErrorType = {
   message: string;
@@ -194,21 +193,21 @@ export default function LoginScreen() {
 
       const data = response.data;
 
-      console.log('Login response:', data); // Debug log
-      
-      // Check if login was not successful
       if (!data.success) {
-        if (data.status === 'NEEDS_VERIFICATION' || data.message === 'NEEDS_VERIFICATION') {
+        if (
+          data.status === "NEEDS_VERIFICATION" ||
+          data.message === "NEEDS_VERIFICATION"
+        ) {
           setShowOTP(true);
           return;
         } else if (data.message) {
-          showError(data.message, 'general');
+          showError(data.message, "general");
         } else {
-          showError('Credenciales incorrectas', 'general');
+          showError("Credenciales incorrectas", "general");
         }
         return;
       }
-      
+
       // Validate token exists for successful login
       if (!data.token) {
         showError("No se recibió un token válido del servidor", "general");
@@ -224,14 +223,10 @@ export default function LoginScreen() {
 
         await signIn(data.token); // navega a la siguiente pantalla desde signIn()
       }, 2000);
-
     } catch (error: any) {
       if (error.response) {
-        console.log("Login error:", error.response.data);
-      } else {
-        console.log("Login error:", error.message);
+        console.error("Login error:", error.response.data);
       }
-
       if (error.response?.data?.message === "NEEDS_VERIFICATION") {
         setShowOTP(true);
         return;
@@ -318,33 +313,45 @@ export default function LoginScreen() {
   }, [showVerificationPrompt, verificationOpacity]);
 
   // Focus animation handlers
-  const animateBorder = useCallback((animValue: Animated.Value, toValue: number) => {
-    Animated.timing(animValue, {
-      toValue,
-      duration: 200,
-      useNativeDriver: false,
-    }).start();
-  }, []);
+  const animateBorder = useCallback(
+    (animValue: Animated.Value, toValue: number) => {
+      Animated.timing(animValue, {
+        toValue,
+        duration: 200,
+        useNativeDriver: false,
+      }).start();
+    },
+    []
+  );
 
-  const handleFocus = useCallback((field: string, animValue: Animated.Value) => {
-    setFocusedField(field);
-    animateBorder(animValue, 1);
-  }, [animateBorder]);
+  const handleFocus = useCallback(
+    (field: string, animValue: Animated.Value) => {
+      setFocusedField(field);
+      animateBorder(animValue, 1);
+    },
+    [animateBorder]
+  );
 
-  const handleBlur = useCallback((field: string, animValue: Animated.Value) => {
-    setFocusedField(null);
-    animateBorder(animValue, 0);
-  }, [animateBorder]);
+  const handleBlur = useCallback(
+    (field: string, animValue: Animated.Value) => {
+      setFocusedField(null);
+      animateBorder(animValue, 0);
+    },
+    [animateBorder]
+  );
 
-  const getBorderColor = useCallback((field: string, animValue: Animated.Value, errorField?: string) => {
-    if (error && error.field === errorField) {
-      return '#ff4444';
-    }
-    return animValue.interpolate({
-      inputRange: [0, 1],
-      outputRange: ['#333', '#FFFFFF']
-    });
-  }, [error]);
+  const getBorderColor = useCallback(
+    (field: string, animValue: Animated.Value, errorField?: string) => {
+      if (error && error.field === errorField) {
+        return "#ff4444";
+      }
+      return animValue.interpolate({
+        inputRange: [0, 1],
+        outputRange: ["#333", "#FFFFFF"],
+      });
+    },
+    [error]
+  );
 
   if (showOTP) {
     return <OTPVerification email={email.trim().toLowerCase()} />;
@@ -382,103 +389,129 @@ export default function LoginScreen() {
           </Animated.View>
         )}
 
-      {/* Verification Prompt */}
-      {showVerificationPrompt && (
-        <Animated.View style={[styles.verificationPrompt, { opacity: verificationOpacity }]}>
-          <Pressable 
-            style={styles.verificationOverlay}
-            onPress={handleVerificationCancel}
-          />
-          <View style={styles.verificationContent}>
-            <Ionicons name="shield-checkmark" size={32} color="white" />
-            <Text style={styles.verificationTitle}>Verificación requerida</Text>
-            <Text style={styles.verificationText}>
-              Te enviaremos un código para verificar tu cuenta
-            </Text>
-            <View style={styles.verificationButtons}>
-              <Pressable 
-                style={[styles.verificationButton, styles.cancelButton]} 
-                onPress={handleVerificationCancel}
-              >
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
-              </Pressable>
-              <Pressable 
-                style={[styles.verificationButton, styles.acceptButton]} 
-                onPress={handleVerificationAccept}
-              >
-                <Text style={styles.acceptButtonText}>Verificar</Text>
-              </Pressable>
-            </View>
-          </View>
-        </Animated.View>
-      )}
-      
-      <Animated.View 
-        style={[
-          styles.inputGroup,
-          { transform: [{ translateX: shakeAnimationEmail }] }
-        ]}
-      >
-        <Text style={styles.label}>Email</Text>
-        <Animated.View style={[styles.inputContainer, { borderColor: getBorderColor('email', borderAnimationEmail, 'email') }]}>
-          <TextInput
-            style={[styles.input, styles.inputNoBorder]}
-            placeholder="correo@mail.com"
-            placeholderTextColor="#666"
-            autoCapitalize="none"
-            keyboardType="email-address"
-            autoComplete="email"
-            textContentType="emailAddress"
-            value={email}
-            onChangeText={setEmail}
-            editable={!loading}
-            onFocus={() => handleFocus('email', borderAnimationEmail)}
-            onBlur={() => handleBlur('email', borderAnimationEmail)}
-          />
-        </Animated.View>
-      </Animated.View>
-      
-      <Animated.View 
-        style={[
-          styles.inputGroup,
-          { transform: [{ translateX: shakeAnimationPassword }] }
-        ]}
-      >
-        <Text style={styles.label}>Contraseña</Text>
-        <Animated.View style={[styles.passwordContainer, { borderColor: getBorderColor('password', borderAnimationPassword, 'password') }]}>
-          <TextInput
-            style={[styles.input, styles.passwordInput]}
-            placeholder="••••••••"
-            placeholderTextColor="#666"
-            secureTextEntry={!showPassword}
-            autoComplete="password"
-            textContentType="password"
-            value={password}
-            onChangeText={setPassword}
-            editable={!loading}
-            onFocus={() => handleFocus('password', borderAnimationPassword)}
-            onBlur={() => handleBlur('password', borderAnimationPassword)}
-          />
-          <Pressable
-            style={styles.eyeButton}
-            onPress={togglePasswordVisibility}
-            disabled={loading}
+        {/* Verification Prompt */}
+        {showVerificationPrompt && (
+          <Animated.View
+            style={[
+              styles.verificationPrompt,
+              { opacity: verificationOpacity },
+            ]}
           >
-            <Ionicons
-              name={showPassword ? "eye-off" : "eye"}
-              size={24}
-              color="#666"
+            <Pressable
+              style={styles.verificationOverlay}
+              onPress={handleVerificationCancel}
             />
-          </Pressable>
+            <View style={styles.verificationContent}>
+              <Ionicons name="shield-checkmark" size={32} color="white" />
+              <Text style={styles.verificationTitle}>
+                Verificación requerida
+              </Text>
+              <Text style={styles.verificationText}>
+                Te enviaremos un código para verificar tu cuenta
+              </Text>
+              <View style={styles.verificationButtons}>
+                <Pressable
+                  style={[styles.verificationButton, styles.cancelButton]}
+                  onPress={handleVerificationCancel}
+                >
+                  <Text style={styles.cancelButtonText}>Cancelar</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.verificationButton, styles.acceptButton]}
+                  onPress={handleVerificationAccept}
+                >
+                  <Text style={styles.acceptButtonText}>Verificar</Text>
+                </Pressable>
+              </View>
+            </View>
+          </Animated.View>
+        )}
+
+        <Animated.View
+          style={[
+            styles.inputGroup,
+            { transform: [{ translateX: shakeAnimationEmail }] },
+          ]}
+        >
+          <Text style={styles.label}>Email</Text>
+          <Animated.View
+            style={[
+              styles.inputContainer,
+              {
+                borderColor: getBorderColor(
+                  "email",
+                  borderAnimationEmail,
+                  "email"
+                ),
+              },
+            ]}
+          >
+            <TextInput
+              style={[styles.input, styles.inputNoBorder]}
+              placeholder="correo@mail.com"
+              placeholderTextColor="#666"
+              autoCapitalize="none"
+              keyboardType="email-address"
+              autoComplete="email"
+              textContentType="emailAddress"
+              value={email}
+              onChangeText={setEmail}
+              editable={!loading}
+              onFocus={() => handleFocus("email", borderAnimationEmail)}
+              onBlur={() => handleBlur("email", borderAnimationEmail)}
+            />
+          </Animated.View>
         </Animated.View>
-      </Animated.View>
-      
-      <Pressable 
-        onPress={navigateToForgotPassword}
-        disabled={loading}
-      >
-        <Text style={styles.forgotPassword}>¿Olvidaste tu contraseña?</Text>
-      </Pressable>
+
+        <Animated.View
+          style={[
+            styles.inputGroup,
+            { transform: [{ translateX: shakeAnimationPassword }] },
+          ]}
+        >
+          <Text style={styles.label}>Contraseña</Text>
+          <Animated.View
+            style={[
+              styles.passwordContainer,
+              {
+                borderColor: getBorderColor(
+                  "password",
+                  borderAnimationPassword,
+                  "password"
+                ),
+              },
+            ]}
+          >
+            <TextInput
+              style={[styles.input, styles.passwordInput]}
+              placeholder="••••••••"
+              placeholderTextColor="#666"
+              secureTextEntry={!showPassword}
+              autoComplete="password"
+              textContentType="password"
+              value={password}
+              onChangeText={setPassword}
+              editable={!loading}
+              onFocus={() => handleFocus("password", borderAnimationPassword)}
+              onBlur={() => handleBlur("password", borderAnimationPassword)}
+            />
+            <Pressable
+              style={styles.eyeButton}
+              onPress={togglePasswordVisibility}
+              disabled={loading}
+            >
+              <Ionicons
+                name={showPassword ? "eye-off" : "eye"}
+                size={24}
+                color="#666"
+              />
+            </Pressable>
+          </Animated.View>
+        </Animated.View>
+
+        <Pressable onPress={navigateToForgotPassword} disabled={loading}>
+          <Text style={styles.forgotPassword}>¿Olvidaste tu contraseña?</Text>
+        </Pressable>
 
         <Pressable
           style={[
@@ -518,7 +551,7 @@ export default function LoginScreen() {
             }}
           >
             <LottieView
-              source={require("../../assets/animations/success.json")}
+              source={require("@/assets/animations/success.json")}
               autoPlay
               loop={false}
               style={{ width: 200, height: 200 }}
@@ -729,11 +762,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   verificationOverlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
 });

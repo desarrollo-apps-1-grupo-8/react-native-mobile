@@ -1,9 +1,9 @@
+import Loader from '@/components/ui/Loader';
 import api from '@/services/api';
 import { useNavigation } from '@react-navigation/native';
 import { isAxiosError } from 'axios';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import Loader from '../Loader';
  
 interface ResetPasswordParams {
   email: string;

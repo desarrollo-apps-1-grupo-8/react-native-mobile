@@ -1,3 +1,4 @@
+import { RouteCard } from "@/components/shipments/RouteCard";
 import api from "@/services/api";
 import { RoleEnum } from "@/utils/roleEnum";
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -12,7 +13,6 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { RouteCard } from "../components/RouteCard";
 import { useSession } from "../context/SessionContext";
 import { DeliveryRouteResponseWithUserInfo } from "../types/route";
 
