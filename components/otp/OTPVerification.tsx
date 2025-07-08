@@ -199,9 +199,8 @@ export default function OTPVerification({ email, isPasswordRecovery = false}: OT
         const now = Date.now();
         await AsyncStorage.setItem('otp_last_resend', now.toString());
       }
-      // Use different endpoint based on whether it's password recovery or registration
-      const endpoint = isPasswordRecovery ? '/forgot-password' : '/send-verification-code';
-      const response = await api.post(endpoint, { email, recoverPassword: isPasswordRecovery });
+      
+      const response = await api.post('/send-verification-code', { email, recoverPassword: isPasswordRecovery });
 
       if (response.data.success) {
         if (isResend) {
