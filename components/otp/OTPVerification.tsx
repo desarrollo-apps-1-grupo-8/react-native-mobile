@@ -142,8 +142,7 @@ export default function OTPVerification({ email, isPasswordRecovery = false}: OT
       setLoading(true);
       resetStatus();
       
-      const endpoint = isPasswordRecovery ? '/verify-reset-code' : '/verify-code';
-      const response = await api.post(endpoint, { 
+      const response = await api.post('/verify-code', { 
         email, 
         verificationCode: verificationCode,
         recoverPassword: isPasswordRecovery
